@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, Phone, MessageCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { JobLifecycleActions } from "@/components/job-lifecycle-actions";
 
 const TrackingMap = dynamic(() => import("@/components/tracking-map").then((m) => m.TrackingMap), {
   ssr: false,
@@ -53,16 +54,19 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
   const [job, setJob] = useState<JobData>(initialJob);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  async function refetch() {
+    const res = await fetch(`/api/jobs/${job.id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setJob(data.job);
+    }
+  }
+
   useEffect(() => {
-    if (["COMPLETED", "REJECTED", "CANCELLED"].includes(job.status)) return;
-    const interval = setInterval(async () => {
-      const res = await fetch(`/api/jobs/${job.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setJob(data.job);
-      }
-    }, 3000);
+    if (["REJECTED", "CANCELLED"].includes(job.status)) return;
+    const interval = setInterval(refetch, 3000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.id, job.status]);
 
   async function runAction(action: string) {
@@ -263,6 +267,10 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
           </p>
         </div>
       </section>
+
+      {!["REQUESTED", "REJECTED"].includes(job.status) && (
+        <JobLifecycleActions job={job} viewerRole={viewerRole} onUpdate={refetch} />
+      )}
 
       {/* Evidence */}
       {job.evidence.length > 0 && (
