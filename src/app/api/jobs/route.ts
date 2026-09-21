@@ -31,22 +31,31 @@ export async function POST(req: Request) {
 
   const data = parsed.data;
 
-  const [service, products] = await Promise.all([
-    data.serviceId ? prisma.service.findUnique({ where: { id: data.serviceId } }) : null,
+  const [workerService, products] = await Promise.all([
+    data.serviceId
+      ? prisma.workerService.findUnique({
+          where: { workerId_serviceId: { workerId: data.workerId, serviceId: data.serviceId } },
+        })
+      : null,
     data.products.length
-      ? prisma.workerProduct.findMany({ where: { id: { in: data.products.map((p) => p.workerProductId) } } })
+      ? prisma.workerProduct.findMany({
+          where: { id: { in: data.products.map((p) => p.workerProductId) }, workerId: data.workerId },
+        })
       : [],
   ]);
 
-  if (data.serviceId && !service) {
-    return NextResponse.json({ error: "Service not found" }, { status: 404 });
+  if (data.serviceId && !workerService) {
+    return NextResponse.json({ error: "This worker doesn't offer that service" }, { status: 404 });
+  }
+  if (data.products.some((p) => !products.find((wp) => wp.id === p.workerProductId))) {
+    return NextResponse.json({ error: "One or more selected materials are invalid" }, { status: 400 });
   }
 
   const productsTotal = data.products.reduce((sum, p) => {
     const product = products.find((wp) => wp.id === p.workerProductId);
     return sum + (product ? product.price * p.qty : 0);
   }, 0);
-  const initialEstimate = (service?.indicativePrice ?? 0) + productsTotal;
+  const initialEstimate = (workerService?.price ?? 0) + productsTotal;
 
   const job = await prisma.job.create({
     data: {

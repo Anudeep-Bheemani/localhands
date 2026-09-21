@@ -53,6 +53,13 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
   const router = useRouter();
   const [job, setJob] = useState<JobData>(initialJob);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (job.status !== "TRAVELLING") return;
+    const tick = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(tick);
+  }, [job.status]);
 
   async function refetch() {
     const res = await fetch(`/api/jobs/${job.id}`);
@@ -100,7 +107,7 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
   const canPollTravel =
     job.status === "TRAVELLING" && job.travelStartedAt && job.travelDurationSeconds != null;
   const travelElapsed = canPollTravel
-    ? (Date.now() - new Date(job.travelStartedAt!).getTime()) / 1000
+    ? (now - new Date(job.travelStartedAt!).getTime()) / 1000
     : 0;
   const travelDone = canPollTravel && travelElapsed >= (job.travelDurationSeconds ?? 0);
 

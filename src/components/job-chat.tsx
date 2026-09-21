@@ -32,6 +32,7 @@ export function JobChat({ jobId, viewerId, otherPartyName }: { jobId: string; vi
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount + poll
     load();
     const interval = setInterval(load, 2500);
     return () => clearInterval(interval);
