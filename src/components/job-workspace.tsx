@@ -72,18 +72,33 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
   }, [job.status]);
 
   async function refetch() {
-    const res = await fetch(`/api/jobs/${job.id}`);
-    if (res.ok) {
-      const data = await res.json();
-      setJob(data.job);
+    try {
+      const res = await fetch(`/api/jobs/${job.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setJob(data.job);
+      }
+    } catch {
+      // ignore
     }
   }
 
   useEffect(() => {
     if (["REJECTED", "CANCELLED"].includes(job.status)) return;
-    const interval = setInterval(refetch, 3000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const controller = new AbortController();
+    async function poll() {
+      try {
+        const res = await fetch(`/api/jobs/${job.id}`, { signal: controller.signal });
+        if (res.ok) {
+          const data = await res.json();
+          setJob(data.job);
+        }
+      } catch (e) {
+        if ((e as Error).name !== "AbortError") throw e;
+      }
+    }
+    const interval = setInterval(poll, 3000);
+    return () => { clearInterval(interval); controller.abort(); };
   }, [job.id, job.status]);
 
   async function runAction(action: string, reason?: string) {

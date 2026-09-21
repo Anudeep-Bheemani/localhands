@@ -27,20 +27,23 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
-  async function load() {
-    const res = await fetch("/api/notifications");
-    if (res.ok) {
-      const data = await res.json();
-      setNotifications(data.notifications);
-      setUnreadCount(data.unreadCount);
-    }
-  }
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-mount + poll
+    const controller = new AbortController();
+    async function load() {
+      try {
+        const res = await fetch("/api/notifications", { signal: controller.signal });
+        if (res.ok) {
+          const data = await res.json();
+          setNotifications(data.notifications);
+          setUnreadCount(data.unreadCount);
+        }
+      } catch (e) {
+        if ((e as Error).name !== "AbortError") throw e;
+      }
+    }
     load();
     const interval = setInterval(load, 10000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); controller.abort(); };
   }, []);
 
   useEffect(() => {
