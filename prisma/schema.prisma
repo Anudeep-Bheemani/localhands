@@ -231,6 +231,10 @@ model Job {
   problemDescription    String        @default("")
   problemVoiceNoteUrl   String?
 
+  jobLat                Float?
+  jobLng                Float?
+  jobAddress            String        @default("")
+
   initialEstimate       Float
   confirmedTotal        Float?
   paymentStatus         PaymentStatus @default(UNPAID)

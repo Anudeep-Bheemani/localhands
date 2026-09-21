@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Job" ADD COLUMN     "jobAddress" TEXT NOT NULL DEFAULT '',
+ADD COLUMN     "jobLat" DOUBLE PRECISION,
+ADD COLUMN     "jobLng" DOUBLE PRECISION;
