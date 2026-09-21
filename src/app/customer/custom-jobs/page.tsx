@@ -2,8 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { Plus, Star, Briefcase, ShieldCheck } from "lucide-react";
+import { Plus, Star, Briefcase, ShieldCheck, ListTodo } from "lucide-react";
 import { PickWorkerButton } from "@/components/pick-worker-button";
+import { EmptyState } from "@/components/empty-state";
 
 export default async function CustomerCustomJobsPage() {
   const user = await getCurrentUser();
@@ -40,7 +41,13 @@ export default async function CustomerCustomJobsPage() {
       </div>
 
       {customJobs.length === 0 ? (
-        <p className="mt-6 text-sm text-ink-muted">You haven&apos;t posted any custom jobs yet.</p>
+        <EmptyState
+          icon={ListTodo}
+          title="No custom jobs posted"
+          description="For anything that doesn't fit a category — moving furniture, dog walking, event setup — post it here and let nearby workers respond."
+          actionLabel="Post a custom job"
+          actionHref="/customer/custom-jobs/new"
+        />
       ) : (
         <div className="mt-6 flex flex-col gap-4">
           {customJobs.map((cj) => (

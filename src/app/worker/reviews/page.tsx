@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { Star } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { ReviewsList } from "@/components/reviews-list";
 
 const DIMS = [
   { key: "quality", label: "Work quality" },
@@ -45,35 +45,21 @@ export default async function WorkerReviewsPage() {
             ))}
           </div>
 
-          <div className="mt-6 flex flex-col gap-3">
-            {reviews.map((r) => {
-              const overall = (r.quality + r.punctuality + r.communication + r.pricingTransparency + r.professionalism) / 5;
-              return (
-                <div key={r.id} className="rounded-2xl border border-border bg-surface p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-accent">
-                      <Star size={14} fill="currentColor" />
-                      <span className="text-sm font-medium text-ink">{overall.toFixed(1)}</span>
-                    </div>
-                    <p className="text-xs text-ink-muted">
-                      {new Date(r.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                    </p>
-                  </div>
-                  <p className="mt-1 text-sm font-medium text-ink">
-                    {r.customer.name} · {r.job.service?.name ?? "Custom job"}
-                  </p>
-                  {r.comment && <p className="mt-1.5 text-sm text-ink-muted">{r.comment}</p>}
-                  <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-ink-muted">
-                    {DIMS.map((d) => (
-                      <span key={d.key} className="rounded-full bg-canvas px-2 py-0.5">
-                        {d.label}: {r[d.key]}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <ReviewsList
+            reviews={reviews.map((r) => ({
+              id: r.id,
+              quality: r.quality,
+              punctuality: r.punctuality,
+              communication: r.communication,
+              pricingTransparency: r.pricingTransparency,
+              professionalism: r.professionalism,
+              comment: r.comment,
+              createdAt: r.createdAt.toISOString(),
+              customerName: r.customer.name,
+              serviceName: r.job.service?.name ?? "Custom job",
+              workerReply: r.workerReply,
+            }))}
+          />
         </>
       )}
     </div>

@@ -1,6 +1,26 @@
 import Link from "next/link";
-import { Star, ShieldCheck, MapPin, Briefcase, Calendar } from "lucide-react";
+import { Star, ShieldCheck, MapPin, Briefcase, Calendar, Clock } from "lucide-react";
 import { Reveal } from "@/components/reveal";
+import type { WorkingHoursDay } from "@/components/worker-profile-manager";
+
+const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function summarizeWorkingHours(hours: WorkingHoursDay[] | null): string | null {
+  if (!hours) return null;
+  const enabled = hours.filter((d) => d.enabled);
+  if (enabled.length === 0) return null;
+
+  const groups: { days: number[]; start: string; end: string }[] = [];
+  for (const d of enabled) {
+    const group = groups.find((g) => g.start === d.start && g.end === d.end);
+    if (group) group.days.push(d.day);
+    else groups.push({ days: [d.day], start: d.start, end: d.end });
+  }
+
+  return groups
+    .map((g) => `${g.days.map((d) => DAY_ABBR[d]).join(", ")} · ${g.start}–${g.end}`)
+    .join(" / ");
+}
 
 type WorkerData = {
   userId: string;
@@ -15,9 +35,10 @@ type WorkerData = {
   ratingAvg: number;
   jobsCompleted: number;
   createdAt: Date;
+  workingHours: WorkingHoursDay[] | null;
   user: { name: string };
   services: { id: string; price: number; service: { name: string; category: { name: string } } }[];
-  products: { id: string; name: string; price: number; inStock: boolean; stockQty: number }[];
+  products: { id: string; name: string; price: number; inStock: boolean; stockQty: number; photoUrl: string | null }[];
   portfolio: { id: string; photoUrl: string; caption: string }[];
   reviewsReceived: {
     id: string;
@@ -28,6 +49,7 @@ type WorkerData = {
     professionalism: number;
     comment: string;
     createdAt: Date;
+    workerReply: string | null;
   }[];
 };
 
@@ -53,6 +75,7 @@ export function WorkerProfileView({
     reviewCount ? worker.reviewsReceived.reduce((s, r) => s + r[key], 0) / reviewCount : 0;
 
   const memberSince = new Date(worker.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  const workingHoursSummary = summarizeWorkingHours(worker.workingHours);
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -94,6 +117,12 @@ export function WorkerProfileView({
                     <MapPin size={13} />
                     {worker.baseAddress || "Service area"} · {worker.serviceRadiusKm} km radius
                   </span>
+                  {workingHoursSummary && (
+                    <span className="flex items-center gap-1">
+                      <Clock size={13} />
+                      {workingHoursSummary}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -139,16 +168,23 @@ export function WorkerProfileView({
         <Reveal delay={0.1}>
           <section className="mt-8">
             <h2 className="font-display text-lg text-ink">Materials on hand</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {worker.products.map((p) => (
-                <span
+                <div
                   key={p.id}
-                  className={`rounded-full border px-3 py-1.5 text-xs ${
-                    p.inStock ? "border-border text-ink-muted" : "border-border text-ink-muted/40 line-through"
-                  }`}
+                  className={`flex items-center gap-2.5 rounded-xl border border-border px-3 py-2 ${!p.inStock ? "opacity-50" : ""}`}
                 >
-                  {p.name} · ₹{p.price.toFixed(0)} {p.inStock ? `· ${p.stockQty} in stock` : "· out of stock"}
-                </span>
+                  {p.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.photoUrl} alt={p.name} className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                  ) : (
+                    <span className="h-10 w-10 shrink-0 rounded-lg bg-canvas" />
+                  )}
+                  <div className="min-w-0">
+                    <p className={`truncate text-xs font-medium ${p.inStock ? "text-ink" : "text-ink-muted line-through"}`}>{p.name}</p>
+                    <p className="text-[11px] text-ink-muted">₹{p.price.toFixed(0)} {p.inStock ? `· ${p.stockQty} in stock` : "· out of stock"}</p>
+                  </div>
+                </div>
               ))}
             </div>
           </section>
@@ -194,6 +230,12 @@ export function WorkerProfileView({
                       </span>
                     </div>
                     {r.comment && <p className="mt-1.5 text-sm text-ink-muted">{r.comment}</p>}
+                    {r.workerReply && (
+                      <div className="mt-3 rounded-lg bg-canvas px-3 py-2">
+                        <p className="text-[11px] font-medium text-ink-muted">Response from {worker.user.name.split(" ")[0]}</p>
+                        <p className="mt-0.5 text-sm text-ink">{r.workerReply}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

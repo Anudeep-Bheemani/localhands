@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Search, MapPin, MessageCircle, ShieldCheck, Star, Wrench, Hammer, ChefHat, Sparkles, Dog, Truck } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { Reveal } from "@/components/reveal";
 
 const CATEGORIES = [
@@ -23,6 +24,20 @@ const STEPS = [
 export default async function Home() {
   const user = await getCurrentUser();
   if (user) redirect(user.role === "WORKER" ? "/worker" : "/customer");
+
+  const [workerCount, categoryCount, jobsCompleted, reviewCount] = await Promise.all([
+    prisma.workerProfile.count({ where: { profileComplete: true } }),
+    prisma.category.count(),
+    prisma.job.count({ where: { status: "COMPLETED" } }),
+    prisma.review.count(),
+  ]);
+
+  const stats = [
+    { label: "Independent workers", value: workerCount },
+    { label: "Service categories", value: categoryCount },
+    { label: "Jobs completed", value: jobsCompleted },
+    { label: "Reviews from real jobs", value: reviewCount },
+  ];
 
   return (
     <div className="flex flex-1 flex-col">
@@ -97,6 +112,20 @@ export default async function Home() {
                 </span>
               </div>
             </Reveal>
+          </div>
+        </section>
+
+        {/* Live stats */}
+        <section className="border-y border-border bg-surface px-6 py-10">
+          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 sm:grid-cols-4">
+            {stats.map((s, i) => (
+              <Reveal key={s.label} delay={i * 0.06}>
+                <div className="text-center sm:text-left">
+                  <p className="font-display text-3xl text-ink sm:text-4xl">{s.value.toLocaleString("en-IN")}</p>
+                  <p className="mt-1 text-xs text-ink-muted sm:text-sm">{s.label}</p>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </section>
 

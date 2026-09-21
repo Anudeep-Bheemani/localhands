@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { WorkerProfileView } from "@/components/worker-profile-view";
+import type { WorkingHoursDay } from "@/components/worker-profile-manager";
 
 export default async function WorkerProfilePage({
   params,
@@ -29,7 +30,7 @@ export default async function WorkerProfilePage({
 
   return (
     <WorkerProfileView
-      worker={worker}
+      worker={{ ...worker, workingHours: worker.workingHours as unknown as WorkingHoursDay[] | null }}
       cta={{ label: `Book ${worker.user.name.split(" ")[0]}`, href: bookHref }}
     />
   );

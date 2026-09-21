@@ -7,6 +7,7 @@ const productSchema = z.object({
   name: z.string().min(1).max(80),
   price: z.coerce.number().min(0),
   stockQty: z.coerce.number().int().min(0).default(0),
+  photoUrl: z.string().url().nullable().optional(),
 });
 
 export async function POST(req: Request) {
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
       price: parsed.data.price,
       stockQty: parsed.data.stockQty,
       inStock: parsed.data.stockQty > 0,
+      photoUrl: parsed.data.photoUrl ?? null,
     },
   });
 

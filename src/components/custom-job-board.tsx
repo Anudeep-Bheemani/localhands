@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, AlertTriangle, Check, Sparkles } from "lucide-react";
+import { MapPin, AlertTriangle, Check, Sparkles, ListTodo } from "lucide-react";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
 
 type Card = {
   id: string;
@@ -20,7 +21,15 @@ type Card = {
 
 export function CustomJobBoard({ cards }: { cards: Card[] }) {
   if (cards.length === 0) {
-    return <p className="mt-6 text-sm text-ink-muted">No open custom jobs right now — check back soon.</p>;
+    return (
+      <EmptyState
+        icon={ListTodo}
+        title="No open custom jobs right now"
+        description="Check back soon, or make sure you're set to accept custom jobs on your profile so you don't miss the next one."
+        actionLabel="Update my profile"
+        actionHref="/worker/profile"
+      />
+    );
   }
 
   return (

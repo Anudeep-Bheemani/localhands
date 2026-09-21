@@ -3,6 +3,10 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 
+const workingHoursSchema = z.array(
+  z.object({ day: z.number().int().min(0).max(6), enabled: z.boolean(), start: z.string(), end: z.string() })
+).length(7);
+
 const patchSchema = z.object({
   availableNow: z.boolean().optional(),
   acceptsCustomJobs: z.boolean().optional(),
@@ -13,6 +17,7 @@ const patchSchema = z.object({
   baseLat: z.coerce.number().optional(),
   baseLng: z.coerce.number().optional(),
   serviceRadiusKm: z.coerce.number().min(1).max(50).optional(),
+  workingHours: workingHoursSchema.optional(),
 });
 
 export async function PATCH(req: Request) {

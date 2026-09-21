@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { Briefcase } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 
 export default async function WorkerJobsPage() {
   const user = await getCurrentUser();
@@ -17,7 +19,13 @@ export default async function WorkerJobsPage() {
     <div>
       <h1 className="font-display text-3xl tracking-tight text-ink">Jobs</h1>
       {jobs.length === 0 ? (
-        <p className="mt-4 text-sm text-ink-muted">No booking requests yet.</p>
+        <EmptyState
+          icon={Briefcase}
+          title="No booking requests yet"
+          description="Complete your profile and add skills so customers can find and book you."
+          actionLabel="Edit my profile"
+          actionHref="/worker/profile"
+        />
       ) : (
         <div className="mt-6 flex flex-col gap-3">
           {jobs.map((job) => (

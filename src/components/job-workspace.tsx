@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Check, Phone, MessageCircle, AlertTriangle, Ban } from "lucide-react";
 import Link from "next/link";
 import { JobLifecycleActions } from "@/components/job-lifecycle-actions";
+import { ReportIssueLink } from "@/components/report-issue-link";
 
 const TrackingMap = dynamic(() => import("@/components/tracking-map").then((m) => m.TrackingMap), {
   ssr: false,
@@ -25,6 +26,7 @@ type JobData = {
   id: string;
   status: string;
   isUrgent: boolean;
+  scheduledFor: string | null;
   problemDescription: string;
   problemVoiceNoteUrl: string | null;
   initialEstimate: number;
@@ -138,6 +140,11 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
           <p className="mt-1 text-sm text-ink-muted">
             Job #{job.id.slice(-6).toUpperCase()} · {otherParty.name}
           </p>
+          {job.scheduledFor && (
+            <p className="mt-1 text-xs text-ink-muted">
+              Scheduled for {new Date(job.scheduledFor).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+            </p>
+          )}
         </div>
         {job.status !== "REQUESTED" && job.status !== "REJECTED" && (
           <div className="flex items-center gap-2">
@@ -329,9 +336,14 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
             </span>
             <span className="font-display text-xl text-ink">₹{runningTotal.toFixed(0)}</span>
           </div>
-          <p className="mt-1 text-xs text-ink-muted">
-            Payment: {job.paymentStatus === "PAID" ? "Paid" : "Unpaid"}
-          </p>
+          <div className="mt-1 flex items-center justify-between text-xs text-ink-muted">
+            <span>Payment: {job.paymentStatus === "PAID" ? "Paid" : "Unpaid"}</span>
+            {viewerRole === "CUSTOMER" && job.paymentStatus === "PAID" && (
+              <Link href={`/customer/jobs/${job.id}/invoice`} className="font-medium text-accent hover:underline">
+                View invoice →
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
@@ -356,6 +368,10 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
           </div>
         </section>
       )}
+
+      <div className="mt-10 border-t border-border pt-4">
+        <ReportIssueLink jobId={job.id} />
+      </div>
     </div>
   );
 }

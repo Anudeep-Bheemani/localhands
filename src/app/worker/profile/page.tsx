@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { WorkerProfileManager } from "@/components/worker-profile-manager";
+import { WorkerProfileManager, type WorkingHoursDay } from "@/components/worker-profile-manager";
 
 export default async function WorkerProfilePage() {
   const user = await getCurrentUser();
@@ -39,7 +39,10 @@ export default async function WorkerProfilePage() {
           <ExternalLink size={14} /> View my public passport
         </Link>
       </div>
-      <WorkerProfileManager profile={profile} categories={categories} />
+      <WorkerProfileManager
+        profile={{ ...profile, workingHours: profile.workingHours as unknown as WorkingHoursDay[] | null }}
+        categories={categories}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ const bookingSchema = z.object({
   jobLng: z.number().nullable().optional(),
   jobAddress: z.string().default(""),
   isUrgent: z.boolean().default(false),
+  scheduledFor: z.coerce.date().nullable().optional(),
   products: z.array(z.object({ workerProductId: z.string(), qty: z.number().int().min(1) })).default([]),
 });
 
@@ -66,6 +67,7 @@ export async function POST(req: Request) {
       customJobId: data.customJobId ?? null,
       status: "REQUESTED",
       isUrgent: data.isUrgent,
+      scheduledFor: data.scheduledFor ?? null,
       problemDescription: data.problemDescription,
       problemVoiceNoteUrl: data.problemVoiceNoteUrl ?? null,
       jobLat: data.jobLat ?? null,

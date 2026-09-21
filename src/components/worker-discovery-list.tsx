@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Star, MapPin, ShieldCheck, Check, X as XIcon } from "lucide-react";
+import { Star, MapPin, ShieldCheck, Check, X as XIcon, Heart } from "lucide-react";
 import { getCategoryIcon } from "@/lib/category-icons";
 import type { MatchReason } from "@/lib/matching";
 import { Reveal } from "@/components/reveal";
@@ -26,6 +26,7 @@ export type WorkerCard = {
   reasons: MatchReason[];
   score: number;
   portfolioCount: number;
+  isFavorite: boolean;
 };
 
 type Category = { id: string; name: string; slug: string; icon: string };
@@ -47,6 +48,7 @@ export function WorkerDiscoveryList({
   matchedCategoryName,
   problem,
   searchParamsRaw,
+  hideHeader = false,
 }: {
   cards: WorkerCard[];
   categories: Category[];
@@ -54,6 +56,7 @@ export function WorkerDiscoveryList({
   matchedCategoryName: string | null;
   problem: string;
   searchParamsRaw: Record<string, string | undefined>;
+  hideHeader?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -95,44 +98,48 @@ export function WorkerDiscoveryList({
 
   return (
     <div>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          {problem && <p className="text-sm text-ink-muted">&ldquo;{problem}&rdquo;</p>}
-          <h1 className="mt-1 font-display text-3xl tracking-tight text-ink">
-            {matchedServiceName
-              ? `${matchedCategoryName} → ${matchedServiceName}`
-              : matchedCategoryName ?? "Top-rated workers near you"}
-          </h1>
-          <p className="mt-1 text-sm text-ink-muted">{filtered.length} workers found</p>
-        </div>
-      </div>
+      {!hideHeader && (
+        <>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              {problem && <p className="text-sm text-ink-muted">&ldquo;{problem}&rdquo;</p>}
+              <h1 className="mt-1 font-display text-3xl tracking-tight text-ink">
+                {matchedServiceName
+                  ? `${matchedCategoryName} → ${matchedServiceName}`
+                  : matchedCategoryName ?? "Top-rated workers near you"}
+              </h1>
+              <p className="mt-1 text-sm text-ink-muted">{filtered.length} workers found</p>
+            </div>
+          </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          onClick={browseAll}
-          className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
-            !matchedCategoryName ? "border-ink bg-ink text-canvas" : "border-border text-ink-muted hover:border-ink hover:text-ink"
-          }`}
-        >
-          Browse everyone nearby
-        </button>
-        {categories.map((cat) => {
-          const Icon = getCategoryIcon(cat.icon);
-          const active = cat.name === matchedCategoryName;
-          return (
+          <div className="mt-4 flex flex-wrap gap-2">
             <button
-              key={cat.id}
-              onClick={() => switchCategory(cat.slug)}
+              onClick={browseAll}
               className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
-                active ? "border-ink bg-ink text-canvas" : "border-border text-ink-muted hover:border-ink hover:text-ink"
+                !matchedCategoryName ? "border-ink bg-ink text-canvas" : "border-border text-ink-muted hover:border-ink hover:text-ink"
               }`}
             >
-              <Icon size={13} />
-              {cat.name}
+              Browse everyone nearby
             </button>
-          );
-        })}
-      </div>
+            {categories.map((cat) => {
+              const Icon = getCategoryIcon(cat.icon);
+              const active = cat.name === matchedCategoryName;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => switchCategory(cat.slug)}
+                  className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
+                    active ? "border-ink bg-ink text-canvas" : "border-border text-ink-muted hover:border-ink hover:text-ink"
+                  }`}
+                >
+                  <Icon size={13} />
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
         <div className="flex flex-wrap gap-1.5">
@@ -213,10 +220,29 @@ function WorkerCardItem({
   const params = new URLSearchParams(searchParamsRaw as Record<string, string>);
   const href = `/customer/worker/${worker.id}?${params.toString()}`;
   const strongMatch = worker.reasons.filter((r) => r.met).length >= 4;
+  const [favorite, setFavorite] = useState(worker.isFavorite);
+
+  async function toggleFavorite(e: React.MouseEvent) {
+    e.preventDefault();
+    const next = !favorite;
+    setFavorite(next);
+    await fetch("/api/favorites", {
+      method: next ? "POST" : "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ workerId: worker.id }),
+    });
+  }
 
   return (
-    <motion.div whileHover={{ y: -3 }} className="rounded-2xl border border-border bg-surface p-5">
-      <div className="flex items-start justify-between gap-3">
+    <motion.div whileHover={{ y: -3 }} className="relative rounded-2xl border border-border bg-surface p-5">
+      <button
+        onClick={toggleFavorite}
+        aria-label={favorite ? "Remove from favorites" : "Save to favorites"}
+        className="absolute right-4 top-4 rounded-full p-1.5 text-ink-muted transition hover:bg-canvas"
+      >
+        <Heart size={16} className={favorite ? "fill-accent text-accent" : ""} />
+      </button>
+      <div className="flex items-start justify-between gap-3 pr-8">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent-soft font-display text-lg text-accent">
             {worker.profilePhotoUrl ? (

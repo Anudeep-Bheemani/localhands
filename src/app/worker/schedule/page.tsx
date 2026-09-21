@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, MapPin } from "lucide-react";
+import { AlertTriangle, MapPin, Clock } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -23,12 +23,12 @@ export default async function WorkerSchedulePage() {
     prisma.job.findMany({
       where: { workerId: user.id, status: { in: [...ACTIVE_STATUSES] } },
       include: { customer: true, service: { include: { category: true } } },
-      orderBy: { updatedAt: "asc" },
+      orderBy: [{ scheduledFor: { sort: "asc", nulls: "last" } }, { updatedAt: "asc" }],
     }),
     prisma.job.findMany({
       where: { workerId: user.id, status: "REQUESTED" },
       include: { customer: true, service: { include: { category: true } } },
-      orderBy: { createdAt: "asc" },
+      orderBy: [{ scheduledFor: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
     }),
   ]);
 
@@ -72,6 +72,7 @@ function ScheduleRow({
     status: string;
     isUrgent: boolean;
     jobAddress: string;
+    scheduledFor: Date | null;
     customer: { name: string };
     service: { name: string; category: { name: string } } | null;
   };
@@ -91,11 +92,19 @@ function ScheduleRow({
           )}
         </div>
         <p className="text-sm text-ink-muted">{job.customer.name}</p>
-        {job.jobAddress && (
-          <p className="mt-1 flex items-center gap-1 text-xs text-ink-muted">
-            <MapPin size={11} /> {job.jobAddress}
-          </p>
-        )}
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
+          {job.jobAddress && (
+            <span className="flex items-center gap-1">
+              <MapPin size={11} /> {job.jobAddress}
+            </span>
+          )}
+          {job.scheduledFor && (
+            <span className="flex items-center gap-1 text-accent">
+              <Clock size={11} />
+              {new Date(job.scheduledFor).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
+            </span>
+          )}
+        </div>
       </div>
       <span
         className={`rounded-full px-3 py-1 text-xs font-medium ${

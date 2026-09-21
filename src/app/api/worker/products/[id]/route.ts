@@ -7,6 +7,7 @@ const updateSchema = z.object({
   name: z.string().min(1).max(80).optional(),
   price: z.coerce.number().min(0).optional(),
   stockQty: z.coerce.number().int().min(0).optional(),
+  photoUrl: z.string().url().nullable().optional(),
 });
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {

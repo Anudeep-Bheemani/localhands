@@ -4,7 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { Reveal } from "@/components/reveal";
-import { Star } from "lucide-react";
+import { Star, BookMarked } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 
 export default async function HomeServicePassportPage() {
   const user = await getCurrentUser();
@@ -33,9 +34,13 @@ export default async function HomeServicePassportPage() {
       </p>
 
       {jobs.length === 0 ? (
-        <p className="mt-8 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-ink-muted">
-          Nothing here yet — completed jobs will show up as your home&apos;s service history.
-        </p>
+        <EmptyState
+          icon={BookMarked}
+          title="Nothing here yet"
+          description="Completed jobs will show up here as your home's service history."
+          actionLabel="Book your first job"
+          actionHref="/customer"
+        />
       ) : (
         <div className="mt-8 flex flex-col gap-4">
           {jobs.map((job, i) => {

@@ -40,6 +40,8 @@ export function BookingForm({
   const [voiceUrl, setVoiceUrl] = useState<string | null>(initialVoiceUrl);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [isUrgent, setIsUrgent] = useState(false);
+  const [timing, setTiming] = useState<"now" | "later">("now");
+  const [scheduledFor, setScheduledFor] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,6 +76,10 @@ export function BookingForm({
       setError("Describe what you need done");
       return;
     }
+    if (timing === "later" && !scheduledFor) {
+      setError("Pick a date and time");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/jobs", {
@@ -89,6 +95,7 @@ export function BookingForm({
           jobLng,
           jobAddress,
           isUrgent,
+          scheduledFor: timing === "later" ? new Date(scheduledFor).toISOString() : null,
           products: Object.entries(quantities).map(([workerProductId, qty]) => ({ workerProductId, qty })),
         }),
       });
@@ -125,6 +132,32 @@ export function BookingForm({
             </button>
           ))}
         </div>
+      </Section>
+
+      <Section title="When">
+        <div className="flex gap-2">
+          {(["now", "later"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTiming(t)}
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                timing === t ? "border-ink bg-ink text-canvas" : "border-border text-ink-muted hover:border-ink hover:text-ink"
+              }`}
+            >
+              {t === "now" ? "As soon as possible" : "Schedule for later"}
+            </button>
+          ))}
+        </div>
+        {timing === "later" && (
+          <input
+            type="datetime-local"
+            value={scheduledFor}
+            min={new Date().toISOString().slice(0, 16)}
+            onChange={(e) => setScheduledFor(e.target.value)}
+            className="input mt-3"
+          />
+        )}
       </Section>
 
       <Section title="Describe the problem">

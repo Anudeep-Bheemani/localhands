@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { WorkerProfileView } from "@/components/worker-profile-view";
+import type { WorkingHoursDay } from "@/components/worker-profile-manager";
 
 export default async function WorkerPassportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,7 +44,11 @@ export default async function WorkerPassportPage({ params }: { params: Promise<{
         </div>
       </header>
       <div className="px-6 py-10">
-        <WorkerProfileView worker={worker} cta={cta} passportMode />
+        <WorkerProfileView
+          worker={{ ...worker, workingHours: worker.workingHours as unknown as WorkingHoursDay[] | null }}
+          cta={cta}
+          passportMode
+        />
       </div>
     </div>
   );

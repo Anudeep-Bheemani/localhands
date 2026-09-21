@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Plus, Trash2, Minus, Locate, Save } from "lucide-react";
+import { Plus, Trash2, Minus, Locate, Save, Loader2, ImagePlus } from "lucide-react";
 import { SinglePhotoUpload } from "@/components/image-upload";
 
 const LocationPicker = dynamic(
@@ -10,11 +10,22 @@ const LocationPicker = dynamic(
   { ssr: false, loading: () => <div className="h-[220px] rounded-2xl border border-border bg-canvas" /> }
 );
 
-type Product = { id: string; name: string; price: number; stockQty: number; inStock: boolean };
+type Product = { id: string; name: string; price: number; stockQty: number; inStock: boolean; photoUrl: string | null };
 type WorkerServiceItem = { id: string; serviceId: string; price: number; service: { name: string; category: { name: string } } };
 type PortfolioItem = { id: string; photoUrl: string; caption: string };
 type Service = { id: string; name: string; indicativePrice: number };
 type Category = { id: string; name: string; icon: string; services: Service[] };
+
+export type WorkingHoursDay = { day: number; enabled: boolean; start: string; end: string };
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export const DEFAULT_WORKING_HOURS: WorkingHoursDay[] = DAY_NAMES.map((_, day) => ({
+  day,
+  enabled: day !== 0,
+  start: "09:00",
+  end: "18:00",
+}));
 
 type Profile = {
   bio: string;
@@ -26,6 +37,7 @@ type Profile = {
   availableNow: boolean;
   acceptsCustomJobs: boolean;
   profilePhotoUrl: string | null;
+  workingHours: WorkingHoursDay[] | null;
   services: WorkerServiceItem[];
   products: Product[];
   portfolio: PortfolioItem[];
@@ -36,6 +48,7 @@ export function WorkerProfileManager({ profile, categories }: { profile: Profile
     <div className="mt-8 flex flex-col gap-10">
       <BasicInfoSection profile={profile} />
       <AvailabilitySection profile={profile} />
+      <WorkingHoursSection initial={profile.workingHours} />
       <SkillsSection initialServices={profile.services} categories={categories} />
       <ProductsSection initialProducts={profile.products} />
       <PortfolioSection initialPortfolio={profile.portfolio} />
@@ -179,6 +192,77 @@ function AvailabilitySection({ profile }: { profile: Profile }) {
   );
 }
 
+function WorkingHoursSection({ initial }: { initial: WorkingHoursDay[] | null }) {
+  const [hours, setHours] = useState<WorkingHoursDay[]>(initial ?? DEFAULT_WORKING_HOURS);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  function update(day: number, patch: Partial<WorkingHoursDay>) {
+    setHours((prev) => prev.map((d) => (d.day === day ? { ...d, ...patch } : d)));
+  }
+
+  async function save() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      await fetch("/api/worker/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workingHours: hours }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Section title="Working hours" hint="When you're typically available — shown on your public profile.">
+      <div className="flex flex-col gap-2">
+        {hours.map((d) => (
+          <div key={d.day} className="flex items-center gap-3 rounded-xl border border-border px-4 py-2.5">
+            <button
+              type="button"
+              onClick={() => update(d.day, { enabled: !d.enabled })}
+              className={`h-5 w-9 shrink-0 rounded-full transition ${d.enabled ? "bg-accent" : "bg-border"}`}
+            >
+              <span className={`block h-4 w-4 translate-y-0.5 rounded-full bg-white shadow transition ${d.enabled ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+            </button>
+            <span className={`w-24 text-sm ${d.enabled ? "text-ink" : "text-ink-muted"}`}>{DAY_NAMES[d.day]}</span>
+            {d.enabled ? (
+              <div className="flex items-center gap-2 text-sm text-ink-muted">
+                <input
+                  type="time"
+                  value={d.start}
+                  onChange={(e) => update(d.day, { start: e.target.value })}
+                  className="rounded-md border border-border bg-surface px-2 py-1"
+                />
+                <span>to</span>
+                <input
+                  type="time"
+                  value={d.end}
+                  onChange={(e) => update(d.day, { end: e.target.value })}
+                  className="rounded-md border border-border bg-surface px-2 py-1"
+                />
+              </div>
+            ) : (
+              <span className="text-sm text-ink-muted">Closed</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={save}
+        disabled={saving}
+        className="mt-4 flex items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-canvas hover:bg-accent disabled:opacity-50"
+      >
+        <Save size={14} /> {saving ? "Saving…" : saved ? "Saved" : "Save hours"}
+      </button>
+    </Section>
+  );
+}
+
 function SkillsSection({ initialServices, categories }: { initialServices: WorkerServiceItem[]; categories: Category[] }) {
   const [services, setServices] = useState(initialServices);
   const [addingFor, setAddingFor] = useState<Service | null>(null);
@@ -285,6 +369,53 @@ function SkillsSection({ initialServices, categories }: { initialServices: Worke
   );
 }
 
+function ProductPhoto({ photoUrl, onChange }: { photoUrl: string | null; onChange: (url: string | null) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("folder", "products");
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await res.json();
+      if (res.ok) onChange(data.url);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => inputRef.current?.click()}
+      className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-canvas text-ink-muted"
+    >
+      {uploading ? (
+        <Loader2 size={14} className="animate-spin" />
+      ) : photoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <ImagePlus size={14} />
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
+    </button>
+  );
+}
+
 function ProductsSection({ initialProducts }: { initialProducts: Product[] }) {
   const [products, setProducts] = useState(initialProducts);
   const [newName, setNewName] = useState("");
@@ -333,6 +464,15 @@ function ProductsSection({ initialProducts }: { initialProducts: Product[] }) {
     });
   }
 
+  async function setPhoto(id: string, photoUrl: string | null) {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, photoUrl } : p)));
+    await fetch(`/api/worker/products/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ photoUrl }),
+    });
+  }
+
   async function removeProduct(id: string) {
     setProducts((prev) => prev.filter((p) => p.id !== id));
     await fetch(`/api/worker/products/${id}`, { method: "DELETE" });
@@ -343,18 +483,21 @@ function ProductsSection({ initialProducts }: { initialProducts: Product[] }) {
       <div className="flex flex-col gap-2">
         {products.map((p) => (
           <div key={p.id} className="flex items-center justify-between rounded-xl border border-border px-4 py-2.5">
-            <div>
-              <p className={`text-sm ${p.stockQty > 0 ? "text-ink" : "text-ink-muted line-through"}`}>{p.name}</p>
-              <div className="flex items-center gap-1 text-xs text-ink-muted">
-                ₹
-                <input
-                  type="number"
-                  min={0}
-                  defaultValue={p.price}
-                  onBlur={(e) => setPrice(p.id, Number(e.target.value))}
-                  className="w-14 rounded border border-transparent bg-transparent px-1 hover:border-border focus:border-border focus:outline-none"
-                />
-                each
+            <div className="flex items-center gap-3">
+              <ProductPhoto photoUrl={p.photoUrl} onChange={(url) => setPhoto(p.id, url)} />
+              <div>
+                <p className={`text-sm ${p.stockQty > 0 ? "text-ink" : "text-ink-muted line-through"}`}>{p.name}</p>
+                <div className="flex items-center gap-1 text-xs text-ink-muted">
+                  ₹
+                  <input
+                    type="number"
+                    min={0}
+                    defaultValue={p.price}
+                    onBlur={(e) => setPrice(p.id, Number(e.target.value))}
+                    className="w-14 rounded border border-transparent bg-transparent px-1 hover:border-border focus:border-border focus:outline-none"
+                  />
+                  each
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-3">

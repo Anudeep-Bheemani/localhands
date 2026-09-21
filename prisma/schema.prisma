@@ -76,6 +76,41 @@ model User {
   reviewsWritten  Review[]         @relation("ReviewCustomer")
   problemPhotos   ProblemPhoto[]
   notifications   Notification[]
+  favorites       Favorite[]
+  savedAddresses  SavedAddress[]
+  issueReports    IssueReport[]
+}
+
+model Favorite {
+  id         String        @id @default(cuid())
+  customerId String
+  customer   User          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  workerId   String
+  worker     WorkerProfile @relation(fields: [workerId], references: [userId], onDelete: Cascade)
+  createdAt  DateTime      @default(now())
+
+  @@unique([customerId, workerId])
+}
+
+model SavedAddress {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  label      String
+  address    String
+  lat        Float
+  lng        Float
+  createdAt  DateTime @default(now())
+}
+
+model IssueReport {
+  id          String   @id @default(cuid())
+  reporterId  String
+  reporter    User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  jobId       String?
+  job         Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  message     String
+  createdAt   DateTime @default(now())
 }
 
 model Notification {
@@ -118,6 +153,7 @@ model WorkerProfile {
   ratingAvg           Float    @default(0)
   jobsCompleted       Int      @default(0)
   totalEarned         Float    @default(0)
+  workingHours        Json?
   createdAt           DateTime @default(now())
 
   portfolio       WorkerPortfolio[]
@@ -127,6 +163,7 @@ model WorkerProfile {
   reviewsReceived Review[]          @relation("ReviewWorker")
   customJobInterests CustomJobInterest[]
   customJobsBooked CustomJob[]      @relation("CustomJobWorker")
+  favoritedBy     Favorite[]
 }
 
 model WorkerPortfolio {
@@ -179,6 +216,7 @@ model WorkerProduct {
   price    Float
   stockQty Int           @default(0)
   inStock  Boolean       @default(true)
+  photoUrl String?
 
   jobProducts JobProduct[]
 }
@@ -243,6 +281,7 @@ model Job {
 
   status                JobStatus     @default(REQUESTED)
   isUrgent              Boolean       @default(false)
+  scheduledFor          DateTime?
 
   problemDescription    String        @default("")
   problemVoiceNoteUrl   String?
@@ -280,6 +319,7 @@ model Job {
   chatMessages     ChatMessage[]
   review           Review?
   problemPhotos    ProblemPhoto[]
+  issueReports     IssueReport[]
 }
 
 model JobStatusHistory {
@@ -336,6 +376,8 @@ model Review {
   pricingTransparency   Int
   professionalism       Int
   comment               String        @default("")
+  workerReply           String?
+  workerReplyAt         DateTime?
   createdAt             DateTime      @default(now())
 }
 
