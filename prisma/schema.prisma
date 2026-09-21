@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  CUSTOMER
+  WORKER
+}
+
+enum JobStatus {
+  REQUESTED   // booking request sent, awaiting worker accept/reject
+  REJECTED
+  BOOKED      // worker accepted
+  TRAVELLING
+  ARRIVED
+  WORKING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum PaymentMethod {
+  UPI
+  CARD
+  CASH
+}
+
+enum AdditionalWorkStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+enum EvidenceType {
+  BEFORE
+  AFTER
+}
+
+enum CustomJobStatus {
+  OPEN
+  CLAIMED
+  BOOKED
+  CLOSED
+}
+
+enum InterestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String
+  role         Role
+  createdAt    DateTime @default(now())
+
+  sessions        Session[]
+  workerProfile   WorkerProfile?
+  customJobsPosted CustomJob[]      @relation("CustomJobCustomer")
+  jobsAsCustomer  Job[]            @relation("JobCustomer")
+  chatMessages    ChatMessage[]
+  reviewsWritten  Review[]         @relation("ReviewCustomer")
+  problemPhotos   ProblemPhoto[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model WorkerProfile {
+  userId              String   @id
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                 String   @default("")
+  experienceYears     Int      @default(0)
+  baseLat             Float
+  baseLng             Float
+  baseAddress         String   @default("")
+  serviceRadiusKm     Float    @default(5)
+  identityVerified    Boolean  @default(false)
+  profileComplete     Boolean  @default(false)
+  availableNow        Boolean  @default(true)
+  acceptsCustomJobs   Boolean  @default(false)
+  profilePhotoUrl     String?
+  ratingAvg           Float    @default(0)
+  jobsCompleted       Int      @default(0)
+  totalEarned         Float    @default(0)
+  createdAt           DateTime @default(now())
+
+  portfolio       WorkerPortfolio[]
+  services        WorkerService[]
+  products        WorkerProduct[]
+  jobsAsWorker    Job[]             @relation("JobWorker")
+  reviewsReceived Review[]          @relation("ReviewWorker")
+  customJobInterests CustomJobInterest[]
+  customJobsBooked CustomJob[]      @relation("CustomJobWorker")
+}
+
+model WorkerPortfolio {
+  id        String        @id @default(cuid())
+  workerId  String
+  worker    WorkerProfile @relation(fields: [workerId], references: [userId], onDelete: Cascade)
+  photoUrl  String
+  caption   String        @default("")
+  createdAt DateTime      @default(now())
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  icon     String    @default("")
+  services Service[]
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String
+  indicativePrice Float
+
+  workerServices WorkerService[]
+  jobs           Job[]
+
+  @@unique([categoryId, slug])
+}
+
+model WorkerService {
+  id        String        @id @default(cuid())
+  workerId  String
+  worker    WorkerProfile @relation(fields: [workerId], references: [userId], onDelete: Cascade)
+  serviceId String
+  service   Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  price     Float
+
+  @@unique([workerId, serviceId])
+}
+
+model WorkerProduct {
+  id       String        @id @default(cuid())
+  workerId String
+  worker   WorkerProfile @relation(fields: [workerId], references: [userId], onDelete: Cascade)
+  name     String
+  price    Float
+  inStock  Boolean       @default(true)
+
+  jobProducts JobProduct[]
+}
+
+model CustomJob {
+  id             String          @id @default(cuid())
+  customerId     String
+  customer       User            @relation("CustomJobCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  description    String
+  tags           String[]        @default([])
+  locationLat    Float
+  locationLng    Float
+  locationAddress String         @default("")
+  budget         Float?
+  preferredTime  String          @default("")
+  isUrgent       Boolean         @default(false)
+  status         CustomJobStatus @default(OPEN)
+  photoUrls      String[]        @default([])
+  voiceNoteUrl   String?
+  createdAt      DateTime        @default(now())
+
+  claimedByWorkerId String?
+  claimedByWorker   WorkerProfile? @relation("CustomJobWorker", fields: [claimedByWorkerId], references: [userId])
+
+  interests CustomJobInterest[]
+  job       Job?
+}
+
+model CustomJobInterest {
+  id          String          @id @default(cuid())
+  customJobId String
+  customJob   CustomJob       @relation(fields: [customJobId], references: [id], onDelete: Cascade)
+  workerId    String
+  worker      WorkerProfile   @relation(fields: [workerId], references: [userId], onDelete: Cascade)
+  message     String          @default("")
+  status      InterestStatus  @default(PENDING)
+  createdAt   DateTime        @default(now())
+
+  @@unique([customJobId, workerId])
+}
+
+model ProblemPhoto {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  photoUrl   String
+  jobId      String?
+  job        Job?     @relation(fields: [jobId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Job {
+  id                    String        @id @default(cuid())
+  customerId            String
+  customer              User          @relation("JobCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  workerId              String
+  worker                WorkerProfile @relation("JobWorker", fields: [workerId], references: [userId], onDelete: Cascade)
+  serviceId             String?
+  service               Service?      @relation(fields: [serviceId], references: [id])
+  customJobId           String?       @unique
+  customJob             CustomJob?    @relation(fields: [customJobId], references: [id])
+
+  status                JobStatus     @default(REQUESTED)
+  isUrgent              Boolean       @default(false)
+
+  problemDescription    String        @default("")
+  problemVoiceNoteUrl   String?
+
+  initialEstimate       Float
+  confirmedTotal        Float?
+  paymentStatus         PaymentStatus @default(UNPAID)
+  paymentMethod         PaymentMethod?
+
+  travelStartLat        Float?
+  travelStartLng        Float?
+  travelEndLat           Float?
+  travelEndLng           Float?
+  travelStartedAt        DateTime?
+  travelDurationSeconds   Int?
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  statusHistory    JobStatusHistory[]
+  additionalWork   AdditionalWorkRequest[]
+  jobProducts      JobProduct[]
+  evidence         JobEvidence[]
+  chatMessages     ChatMessage[]
+  review           Review?
+  problemPhotos    ProblemPhoto[]
+}
+
+model JobStatusHistory {
+  id        String    @id @default(cuid())
+  jobId     String
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status    JobStatus
+  note      String    @default("")
+  timestamp DateTime  @default(now())
+}
+
+model AdditionalWorkRequest {
+  id          String                @id @default(cuid())
+  jobId       String
+  job         Job                   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  description String
+  extraCost   Float
+  reason      String                @default("")
+  status      AdditionalWorkStatus  @default(PENDING)
+  createdAt   DateTime              @default(now())
+}
+
+model JobProduct {
+  id              String        @id @default(cuid())
+  jobId           String
+  job             Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  workerProductId String
+  workerProduct   WorkerProduct @relation(fields: [workerProductId], references: [id])
+  qty             Int           @default(1)
+  priceAtTime     Float
+}
+
+model JobEvidence {
+  id        String       @id @default(cuid())
+  jobId     String
+  job       Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  photoUrl  String
+  type      EvidenceType
+  createdAt DateTime     @default(now())
+}
+
+model Review {
+  id                    String        @id @default(cuid())
+  jobId                 String        @unique
+  job                   Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  customerId            String
+  customer              User          @relation("ReviewCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  workerId              String
+  worker                WorkerProfile @relation("ReviewWorker", fields: [workerId], references: [userId], onDelete: Cascade)
+
+  quality               Int
+  punctuality           Int
+  communication         Int
+  pricingTransparency   Int
+  professionalism       Int
+  comment               String        @default("")
+  createdAt             DateTime      @default(now())
+}
+
+model ChatMessage {
+  id           String   @id @default(cuid())
+  jobId        String
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  senderId     String
+  sender       User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content      String?
+  imageUrl     String?
+  voiceNoteUrl String?
+  createdAt    DateTime @default(now())
+}
