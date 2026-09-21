@@ -247,7 +247,7 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
       <section className="mt-8">
         <h2 className="font-display text-lg text-ink">Cost</h2>
         <div className="mt-3 rounded-2xl border border-border bg-surface p-5">
-          <Row label={job.service?.name ?? "Service"} value={serviceEstimate} />
+          <Row label={job.service?.name ?? "Custom job"} value={serviceEstimate} />
           {job.jobProducts.map((p) => (
             <Row key={p.id} label={`${p.workerProduct.name} × ${p.qty}`} value={p.qty * p.priceAtTime} muted />
           ))}
