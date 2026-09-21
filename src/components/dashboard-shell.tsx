@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
-  Menu, X, ChevronDown, Settings, LogOut, HelpCircle, ShieldCheck,
+  Menu, X, ChevronDown, Settings, HelpCircle, ShieldCheck,
   Home, Compass, Briefcase, ListTodo, Heart, BookMarked,
   LayoutDashboard, CalendarClock, Star, UserCircle,
 } from "lucide-react";
 import { NotificationBell } from "@/components/notification-bell";
+import { LogoutButton } from "@/components/logout-button";
 import type { LucideIcon } from "lucide-react";
 import type { NavItem, NavIconName } from "@/lib/nav-items";
 
@@ -54,8 +55,13 @@ export function DashboardShell({
         <button onClick={() => setMobileOpen(true)} className="rounded-xl p-1.5 text-ink-muted hover:bg-surface-subtle">
           <Menu size={20} />
         </button>
-        <span className="font-display italic text-lg text-ink">LocalHands</span>
-        <NotificationBell />
+        <Link href="/" className="font-display italic text-lg text-ink">
+          LocalHands
+        </Link>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <LogoutButton compact />
+        </div>
       </div>
 
       {/* Sidebar */}
@@ -149,7 +155,7 @@ export function DashboardShell({
                 >
                   <HelpCircle size={15} /> Help & support
                 </Link>
-                <LogoutMenuItem />
+                <LogoutButton menuRow />
               </div>
             )}
           </div>
@@ -166,8 +172,17 @@ export function DashboardShell({
 
       {/* Main content */}
       <div className="flex min-h-screen flex-1 flex-col">
-        <div className="hidden items-center justify-end border-b border-border bg-surface/80 px-8 py-4 backdrop-blur lg:flex">
-          <NotificationBell />
+        <div className="hidden items-center justify-between border-b border-border bg-surface/80 px-8 py-4 backdrop-blur lg:flex">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition hover:text-ink"
+          >
+            <Home size={15} /> Home
+          </Link>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <LogoutButton />
+          </div>
         </div>
         <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">{children}</main>
         <footer className="border-t border-border px-6 py-6">
@@ -182,23 +197,5 @@ export function DashboardShell({
         </footer>
       </div>
     </div>
-  );
-}
-
-function LogoutMenuItem() {
-  const router = useRouter();
-  return (
-    <button
-      type="button"
-      onClick={async (e) => {
-        e.preventDefault();
-        await fetch("/api/auth/logout", { method: "POST" });
-        router.push("/login");
-        router.refresh();
-      }}
-      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-danger hover:bg-danger-soft"
-    >
-      <LogOut size={15} /> Log out
-    </button>
   );
 }

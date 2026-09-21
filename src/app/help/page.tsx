@@ -64,13 +64,26 @@ export default async function HelpPage() {
   const user = await getCurrentUser();
   if (!user) {
     return (
-      <div className="min-h-screen bg-canvas px-6 py-16">
-        <div className="mx-auto max-w-2xl">
-          <Link href="/" className="font-display italic text-lg text-ink-muted">
-            LocalHands
-          </Link>
-        </div>
-        <div className="mt-8">
+      <div className="min-h-screen bg-canvas">
+        <header className="border-b border-border bg-surface/80 backdrop-blur">
+          <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
+            <Link href="/" className="font-display text-lg tracking-tight text-ink">
+              LocalHands
+            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/login" className="px-3 py-1.5 text-xs font-semibold text-ink-muted hover:text-ink">
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-full bg-ink px-4 py-1.5 text-xs font-semibold text-canvas transition hover:bg-accent-dark"
+              >
+                Get started
+              </Link>
+            </div>
+          </div>
+        </header>
+        <div className="px-6 py-12">
           <HelpContent />
         </div>
       </div>
