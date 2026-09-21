@@ -6,7 +6,7 @@ import { z } from "zod";
 const updateSchema = z.object({
   name: z.string().min(1).max(80).optional(),
   price: z.coerce.number().min(0).optional(),
-  inStock: z.boolean().optional(),
+  stockQty: z.coerce.number().int().min(0).optional(),
 });
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -25,7 +25,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
 
-  const product = await prisma.workerProduct.update({ where: { id }, data: parsed.data });
+  const product = await prisma.workerProduct.update({
+    where: { id },
+    data: {
+      ...parsed.data,
+      ...(parsed.data.stockQty != null ? { inStock: parsed.data.stockQty > 0 } : {}),
+    },
+  });
   return NextResponse.json({ product });
 }
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Check, Phone, MessageCircle, AlertTriangle } from "lucide-react";
+import { Check, Phone, MessageCircle, AlertTriangle, Ban } from "lucide-react";
 import Link from "next/link";
 import { JobLifecycleActions } from "@/components/job-lifecycle-actions";
 
@@ -30,6 +30,11 @@ type JobData = {
   initialEstimate: number;
   confirmedTotal: number | null;
   paymentStatus: string;
+  proposedScope: string | null;
+  proposedTotal: number | null;
+  scopeConfirmed: boolean;
+  cancelledBy: "CUSTOMER" | "WORKER" | null;
+  cancellationReason: string;
   jobAddress: string;
   jobLat: number | null;
   jobLng: number | null;
@@ -54,6 +59,8 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
   const [job, setJob] = useState<JobData>(initialJob);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
   useEffect(() => {
     if (job.status !== "TRAVELLING") return;
@@ -76,13 +83,13 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.id, job.status]);
 
-  async function runAction(action: string) {
+  async function runAction(action: string, reason?: string) {
     setActionLoading(action);
     try {
       const res = await fetch(`/api/jobs/${job.id}/action`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, reason }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -93,6 +100,11 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
       setActionLoading(null);
     }
   }
+
+  const canCancel =
+    viewerRole === "CUSTOMER"
+      ? ["REQUESTED", "BOOKED"].includes(job.status)
+      : ["REQUESTED", "BOOKED", "TRAVELLING", "ARRIVED"].includes(job.status);
 
   const productsTotal = job.jobProducts.reduce((s, p) => s + p.qty * p.priceAtTime, 0);
   const serviceEstimate = job.initialEstimate - productsTotal;
@@ -176,6 +188,11 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
         <div className="mt-6 rounded-2xl border border-border bg-surface p-5 text-sm text-ink-muted">
           This request was declined.
         </div>
+      ) : job.status === "CANCELLED" ? (
+        <div className="mt-6 rounded-2xl border border-border bg-surface p-5 text-sm text-ink-muted">
+          Cancelled by {job.cancelledBy === "CUSTOMER" ? "the customer" : "the worker"}
+          {job.cancellationReason ? ` — "${job.cancellationReason}"` : "."}
+        </div>
       ) : (
         <div className="mt-6 flex items-center gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-5">
           {STEPS.map((step, i) => (
@@ -230,14 +247,57 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
             </ActionButton>
           )}
           {job.status === "ARRIVED" && (
-            <ActionButton onClick={() => runAction("start_work")} loading={actionLoading === "start_work"}>
-              Start work
+            <ActionButton
+              onClick={() => runAction("start_work")}
+              loading={actionLoading === "start_work"}
+              disabled={!job.scopeConfirmed}
+            >
+              {job.scopeConfirmed ? "Start work" : "Confirm scope first"}
             </ActionButton>
           )}
           {job.status === "WORKING" && (
             <ActionButton onClick={() => runAction("complete")} loading={actionLoading === "complete"}>
               Mark complete
             </ActionButton>
+          )}
+        </div>
+      )}
+
+      {canCancel && (
+        <div className="mt-4 flex justify-end">
+          {cancelling ? (
+            <div className="w-full max-w-sm rounded-2xl border border-border bg-surface p-4">
+              <p className="text-sm font-medium text-ink">Cancel this booking?</p>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={2}
+                placeholder="Reason (optional)"
+                className="input mt-2 resize-none"
+              />
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => runAction("cancel", cancelReason)}
+                  disabled={actionLoading === "cancel"}
+                  className="rounded-full bg-ink px-4 py-1.5 text-xs font-semibold text-canvas hover:bg-accent disabled:opacity-50"
+                >
+                  {actionLoading === "cancel" ? "Cancelling…" : "Confirm cancellation"}
+                </button>
+                <button
+                  onClick={() => setCancelling(false)}
+                  className="rounded-full border border-border px-4 py-1.5 text-xs font-medium text-ink-muted hover:border-ink"
+                >
+                  Never mind
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setCancelling(true)}
+              className="flex items-center gap-1.5 text-xs font-medium text-ink-muted hover:text-accent"
+            >
+              <Ban size={13} /> Cancel booking
+            </button>
           )}
         </div>
       )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, AlertTriangle, Check } from "lucide-react";
+import { MapPin, AlertTriangle, Check, Sparkles } from "lucide-react";
 import { Reveal } from "@/components/reveal";
 
 type Card = {
@@ -15,6 +15,7 @@ type Card = {
   photoUrls: string[];
   distanceKm: number;
   alreadyInterested: boolean;
+  matchesSkills: boolean;
 };
 
 export function CustomJobBoard({ cards }: { cards: Card[] }) {
@@ -60,11 +61,18 @@ function CustomJobCard({ card }: { card: Card }) {
     <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm text-ink">{card.description}</p>
-        {card.isUrgent && (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-medium text-accent">
-            <AlertTriangle size={11} /> Urgent
-          </span>
-        )}
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {card.isUrgent && (
+            <span className="flex items-center gap-1 rounded-full bg-accent-soft px-2.5 py-1 text-[11px] font-medium text-accent">
+              <AlertTriangle size={11} /> Urgent
+            </span>
+          )}
+          {card.matchesSkills && (
+            <span className="flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 text-[11px] font-medium text-ink-muted">
+              <Sparkles size={11} className="text-accent" /> Matches your skills
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="mt-2 flex flex-wrap gap-1.5">

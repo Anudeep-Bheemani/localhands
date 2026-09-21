@@ -6,6 +6,7 @@ import { z } from "zod";
 const productSchema = z.object({
   name: z.string().min(1).max(80),
   price: z.coerce.number().min(0),
+  stockQty: z.coerce.number().int().min(0).default(0),
 });
 
 export async function POST(req: Request) {
@@ -19,7 +20,13 @@ export async function POST(req: Request) {
   }
 
   const product = await prisma.workerProduct.create({
-    data: { workerId: user.id, name: parsed.data.name, price: parsed.data.price },
+    data: {
+      workerId: user.id,
+      name: parsed.data.name,
+      price: parsed.data.price,
+      stockQty: parsed.data.stockQty,
+      inStock: parsed.data.stockQty > 0,
+    },
   });
 
   return NextResponse.json({ product });

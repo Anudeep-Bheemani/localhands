@@ -60,9 +60,11 @@ export function WorkerDiscoveryList({
   const [sort, setSort] = useState<SortKey>("best");
   const [availableOnly, setAvailableOnly] = useState(false);
   const [minRating, setMinRating] = useState(0);
+  const maxPossibleDistance = Math.max(1, ...cards.map((c) => Math.ceil(c.distanceKm)));
+  const [maxDistance, setMaxDistance] = useState(maxPossibleDistance);
 
   const filtered = useMemo(() => {
-    let list = cards.filter((c) => c.ratingAvg >= minRating);
+    let list = cards.filter((c) => c.ratingAvg >= minRating && c.distanceKm <= maxDistance);
     if (availableOnly) list = list.filter((c) => c.availableNow);
 
     const sorters: Record<SortKey, (a: WorkerCard, b: WorkerCard) => number> = {
@@ -73,7 +75,7 @@ export function WorkerDiscoveryList({
       price: (a, b) => a.price - b.price,
     };
     return [...list].sort(sorters[sort]);
-  }, [cards, sort, availableOnly, minRating]);
+  }, [cards, sort, availableOnly, minRating, maxDistance]);
 
   function switchCategory(slug: string) {
     const params = new URLSearchParams(searchParamsRaw as Record<string, string>);
@@ -155,6 +157,18 @@ export function WorkerDiscoveryList({
                 </option>
               ))}
             </select>
+          </label>
+          <label className="flex items-center gap-1.5 text-xs text-ink-muted">
+            Within
+            <input
+              type="range"
+              min={1}
+              max={maxPossibleDistance}
+              value={maxDistance}
+              onChange={(e) => setMaxDistance(Number(e.target.value))}
+              className="w-24 accent-accent"
+            />
+            <span className="w-12 text-ink">{maxDistance} km</span>
           </label>
         </div>
       </div>

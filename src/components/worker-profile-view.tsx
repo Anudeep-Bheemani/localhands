@@ -17,7 +17,7 @@ type WorkerData = {
   createdAt: Date;
   user: { name: string };
   services: { id: string; price: number; service: { name: string; category: { name: string } } }[];
-  products: { id: string; name: string; price: number; inStock: boolean }[];
+  products: { id: string; name: string; price: number; inStock: boolean; stockQty: number }[];
   portfolio: { id: string; photoUrl: string; caption: string }[];
   reviewsReceived: {
     id: string;
@@ -147,7 +147,7 @@ export function WorkerProfileView({
                     p.inStock ? "border-border text-ink-muted" : "border-border text-ink-muted/40 line-through"
                   }`}
                 >
-                  {p.name} · ₹{p.price.toFixed(0)}
+                  {p.name} · ₹{p.price.toFixed(0)} {p.inStock ? `· ${p.stockQty} in stock` : "· out of stock"}
                 </span>
               ))}
             </div>

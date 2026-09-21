@@ -45,7 +45,7 @@ export default async function BookWorkerPage({
             category: s.service.category.name,
             price: s.price,
           })),
-          products: worker.products.map((p) => ({ id: p.id, name: p.name, price: p.price })),
+          products: worker.products.map((p) => ({ id: p.id, name: p.name, price: p.price, stockQty: p.stockQty })),
         }}
         preselectedServiceId={preselectedServiceId}
         initialProblem={sp.problem ?? ""}

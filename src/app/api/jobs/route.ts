@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { notify } from "@/lib/notify";
 import { z } from "zod";
 
 const bookingSchema = z.object({
@@ -82,6 +83,14 @@ export async function POST(req: Request) {
         ? { problemPhotos: { create: { customerId: user.id, photoUrl: data.problemPhotoUrl } } }
         : {}),
     },
+  });
+
+  await notify({
+    userId: data.workerId,
+    type: "booking_requested",
+    title: `New booking request from ${user.name}`,
+    message: data.problemDescription.slice(0, 120),
+    link: `/worker/jobs/${job.id}`,
   });
 
   return NextResponse.json({ job });

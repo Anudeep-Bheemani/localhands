@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { notify } from "@/lib/notify";
 import { z } from "zod";
 
 const schema = z.object({ workerId: z.string() });
@@ -49,6 +50,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       data: { status: "DECLINED" },
     }),
   ]);
+
+  await notify({
+    userId: parsed.data.workerId,
+    type: "custom_job_picked",
+    title: `${user.name} picked you for their custom job`,
+    message: customJob.description.slice(0, 120),
+    link: `/worker/jobs/${job.id}`,
+  });
 
   return NextResponse.json({ job });
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { Plus, Star } from "lucide-react";
+import { Plus, Star, Briefcase, ShieldCheck } from "lucide-react";
 import { PickWorkerButton } from "@/components/pick-worker-button";
 
 export default async function CustomerCustomJobsPage() {
@@ -12,7 +12,16 @@ export default async function CustomerCustomJobsPage() {
   const customJobs = await prisma.customJob.findMany({
     where: { customerId: user.id },
     include: {
-      interests: { include: { worker: { include: { user: { select: { id: true, name: true } } } } } },
+      interests: {
+        include: {
+          worker: {
+            include: {
+              user: { select: { id: true, name: true } },
+              services: { include: { service: { include: { category: true } } }, take: 3 },
+            },
+          },
+        },
+      },
       job: true,
     },
     orderBy: { createdAt: "desc" },
@@ -71,18 +80,42 @@ export default async function CustomerCustomJobsPage() {
                   {cj.interests.length === 0 ? (
                     <p className="mt-2 text-sm text-ink-muted">No one has expressed interest yet.</p>
                   ) : (
-                    <div className="mt-2 flex flex-col gap-2">
+                    <div className="mt-2 flex flex-col gap-3">
                       {cj.interests.map((interest) => (
-                        <div key={interest.id} className="flex items-center justify-between rounded-xl border border-border px-4 py-2.5">
-                          <div>
-                            <p className="text-sm font-medium text-ink">{interest.worker.user.name}</p>
-                            <p className="flex items-center gap-1 text-xs text-ink-muted">
-                              <Star size={11} className="text-accent" fill="currentColor" />
-                              {interest.worker.ratingAvg > 0 ? interest.worker.ratingAvg.toFixed(1) : "New"}
-                              {interest.message && ` — "${interest.message}"`}
-                            </p>
+                        <div key={interest.id} className="rounded-xl border border-border px-4 py-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-sm font-medium text-ink">{interest.worker.user.name}</p>
+                                {interest.worker.identityVerified && <ShieldCheck size={13} className="text-accent" />}
+                              </div>
+                              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-muted">
+                                <span className="flex items-center gap-1">
+                                  <Star size={11} className="text-accent" fill="currentColor" />
+                                  {interest.worker.ratingAvg > 0 ? interest.worker.ratingAvg.toFixed(1) : "New"}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Briefcase size={11} /> {interest.worker.jobsCompleted} jobs · {interest.worker.experienceYears} yrs
+                                </span>
+                              </div>
+                              {interest.worker.services.length > 0 && (
+                                <p className="mt-1 text-xs text-ink-muted">
+                                  {[...new Set(interest.worker.services.map((s) => s.service.category.name))].join(" · ")}
+                                </p>
+                              )}
+                              {interest.message && <p className="mt-1.5 text-sm text-ink">&ldquo;{interest.message}&rdquo;</p>}
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-2">
+                              <PickWorkerButton customJobId={cj.id} workerId={interest.worker.user.id} />
+                              <Link
+                                href={`/workers/${interest.worker.user.id}`}
+                                target="_blank"
+                                className="text-xs font-medium text-ink-muted hover:text-ink hover:underline"
+                              >
+                                View profile
+                              </Link>
+                            </div>
                           </div>
-                          <PickWorkerButton customJobId={cj.id} workerId={interest.worker.user.id} />
                         </div>
                       ))}
                     </div>

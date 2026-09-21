@@ -75,6 +75,21 @@ model User {
   chatMessages    ChatMessage[]
   reviewsWritten  Review[]         @relation("ReviewCustomer")
   problemPhotos   ProblemPhoto[]
+  notifications   Notification[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String   @default("")
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
 }
 
 model Session {
@@ -162,6 +177,7 @@ model WorkerProduct {
   worker   WorkerProfile @relation(fields: [workerId], references: [userId], onDelete: Cascade)
   name     String
   price    Float
+  stockQty Int           @default(0)
   inStock  Boolean       @default(true)
 
   jobProducts JobProduct[]
@@ -239,6 +255,13 @@ model Job {
   confirmedTotal        Float?
   paymentStatus         PaymentStatus @default(UNPAID)
   paymentMethod         PaymentMethod?
+
+  proposedScope         String?
+  proposedTotal         Float?
+  scopeConfirmed        Boolean       @default(false)
+
+  cancelledBy           Role?
+  cancellationReason    String        @default("")
 
   travelStartLat        Float?
   travelStartLng        Float?

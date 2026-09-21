@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { notify } from "@/lib/notify";
 import { z } from "zod";
 
 const schema = z.object({ status: z.enum(["APPROVED", "DECLINED"]) });
@@ -10,7 +11,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id, reqId } = await params;
-  const job = await prisma.job.findUnique({ where: { id } });
+  const job = await prisma.job.findUnique({ where: { id }, include: { customer: true } });
   if (!job || job.customerId !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const existing = await prisma.additionalWorkRequest.findUnique({ where: { id: reqId } });
@@ -25,6 +26,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const updated = await prisma.additionalWorkRequest.update({
     where: { id: reqId },
     data: { status: parsed.data.status },
+  });
+
+  await notify({
+    userId: job.workerId,
+    type: parsed.data.status === "APPROVED" ? "additional_work_approved" : "additional_work_declined",
+    title:
+      parsed.data.status === "APPROVED"
+        ? `${job.customer.name} approved your additional work request`
+        : `${job.customer.name} declined your additional work request`,
+    link: `/worker/jobs/${id}`,
   });
 
   return NextResponse.json({ request: updated });

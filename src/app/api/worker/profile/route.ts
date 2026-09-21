@@ -6,6 +6,13 @@ import { z } from "zod";
 const patchSchema = z.object({
   availableNow: z.boolean().optional(),
   acceptsCustomJobs: z.boolean().optional(),
+  bio: z.string().max(1000).optional(),
+  experienceYears: z.coerce.number().int().min(0).max(60).optional(),
+  profilePhotoUrl: z.string().url().nullable().optional(),
+  baseAddress: z.string().min(1).max(200).optional(),
+  baseLat: z.coerce.number().optional(),
+  baseLng: z.coerce.number().optional(),
+  serviceRadiusKm: z.coerce.number().min(1).max(50).optional(),
 });
 
 export async function PATCH(req: Request) {

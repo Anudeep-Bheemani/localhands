@@ -10,14 +10,17 @@ export default async function WorkerProfilePage() {
   if (!user) redirect("/login");
   if (user.role !== "WORKER") redirect("/customer");
 
-  const profile = await prisma.workerProfile.findUnique({
-    where: { userId: user.id },
-    include: {
-      services: { include: { service: { include: { category: true } } } },
-      products: { orderBy: { name: "asc" } },
-      portfolio: true,
-    },
-  });
+  const [profile, categories] = await Promise.all([
+    prisma.workerProfile.findUnique({
+      where: { userId: user.id },
+      include: {
+        services: { include: { service: { include: { category: true } } } },
+        products: { orderBy: { name: "asc" } },
+        portfolio: { orderBy: { createdAt: "desc" } },
+      },
+    }),
+    prisma.category.findMany({ include: { services: { orderBy: { name: "asc" } } }, orderBy: { name: "asc" } }),
+  ]);
 
   if (!profile) redirect("/worker/onboarding");
 
@@ -36,7 +39,7 @@ export default async function WorkerProfilePage() {
           <ExternalLink size={14} /> View my public passport
         </Link>
       </div>
-      <WorkerProfileManager profile={profile} />
+      <WorkerProfileManager profile={profile} categories={categories} />
     </div>
   );
 }

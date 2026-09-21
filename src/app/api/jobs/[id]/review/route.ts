@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { notify } from "@/lib/notify";
 import { z } from "zod";
 
 const schema = z.object({
@@ -17,7 +18,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const job = await prisma.job.findUnique({ where: { id }, include: { review: true } });
+  const job = await prisma.job.findUnique({ where: { id }, include: { review: true, customer: true } });
   if (!job || job.customerId !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if (job.status !== "COMPLETED") return NextResponse.json({ error: "Job isn't completed yet" }, { status: 409 });
   if (job.review) return NextResponse.json({ error: "Already reviewed" }, { status: 409 });
@@ -41,6 +42,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const overallAvg = dims.reduce((s, v) => s + v, 0) / dims.length;
 
   await prisma.workerProfile.update({ where: { userId: job.workerId }, data: { ratingAvg: overallAvg } });
+
+  const overall = (parsed.data.quality + parsed.data.punctuality + parsed.data.communication + parsed.data.pricingTransparency + parsed.data.professionalism) / 5;
+  await notify({
+    userId: job.workerId,
+    type: "review_received",
+    title: `${job.customer.name} left you a ${overall.toFixed(1)}★ review`,
+    message: parsed.data.comment,
+    link: `/worker/reviews`,
+  });
 
   return NextResponse.json({ review });
 }

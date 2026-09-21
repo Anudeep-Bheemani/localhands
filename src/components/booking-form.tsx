@@ -8,7 +8,7 @@ import { SinglePhotoUpload } from "@/components/image-upload";
 import { VoiceRecorder } from "@/components/voice-recorder";
 
 type WorkerService = { id: string; name: string; category: string; price: number };
-type WorkerProduct = { id: string; name: string; price: number };
+type WorkerProduct = { id: string; name: string; price: number; stockQty: number };
 
 export function BookingForm({
   worker,
@@ -57,10 +57,12 @@ export function BookingForm({
   const estimate = (selectedService?.price ?? 0) + productsTotal;
 
   function setQty(productId: string, qty: number) {
+    const max = worker.products.find((p) => p.id === productId)?.stockQty ?? 0;
+    const clamped = Math.min(qty, max);
     setQuantities((prev) => {
       const next = { ...prev };
-      if (qty <= 0) delete next[productId];
-      else next[productId] = qty;
+      if (clamped <= 0) delete next[productId];
+      else next[productId] = clamped;
       return next;
     });
   }
@@ -153,7 +155,7 @@ export function BookingForm({
                 <div key={p.id} className="flex items-center justify-between rounded-xl border border-border px-4 py-2.5">
                   <div>
                     <p className="text-sm text-ink">{p.name}</p>
-                    <p className="text-xs text-ink-muted">₹{p.price.toFixed(0)} each</p>
+                    <p className="text-xs text-ink-muted">₹{p.price.toFixed(0)} each · {p.stockQty} available</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <button type="button" onClick={() => setQty(p.id, qty - 1)} className="rounded-full border border-border p-1.5 text-ink-muted hover:border-ink hover:text-ink">

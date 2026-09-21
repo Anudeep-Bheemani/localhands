@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { notify } from "@/lib/notify";
 import { z } from "zod";
 
 const schema = z.object({ message: z.string().max(500).default("") });
@@ -23,6 +24,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     where: { customJobId_workerId: { customJobId: id, workerId: user.id } },
     update: { message: parsed.data.message },
     create: { customJobId: id, workerId: user.id, message: parsed.data.message },
+  });
+
+  await notify({
+    userId: customJob.customerId,
+    type: "custom_job_interest",
+    title: `${user.name} is interested in your custom job`,
+    message: parsed.data.message,
+    link: `/customer/custom-jobs`,
   });
 
   return NextResponse.json({ interest });

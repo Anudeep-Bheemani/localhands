@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Plus } from "lucide-react";
+import { Star, Plus, Check } from "lucide-react";
 import { SinglePhotoUpload } from "@/components/image-upload";
 
 type AdditionalWork = { id: string; description: string; extraCost: number; status: string };
@@ -12,6 +12,9 @@ type JobLike = {
   paymentStatus: string;
   additionalWork: AdditionalWork[];
   review: { id: string } | null;
+  proposedScope: string | null;
+  proposedTotal: number | null;
+  scopeConfirmed: boolean;
 };
 
 const DIMS = [
@@ -33,7 +36,11 @@ export function JobLifecycleActions({
 }) {
   return (
     <div className="mt-8 flex flex-col gap-8">
-      {viewerRole === "WORKER" && ["ARRIVED", "WORKING"].includes(job.status) && (
+      {job.status === "ARRIVED" && (
+        <ScopeSection job={job} viewerRole={viewerRole} onUpdate={onUpdate} />
+      )}
+
+      {viewerRole === "WORKER" && job.status === "WORKING" && (
         <AdditionalWorkForm jobId={job.id} onSubmitted={onUpdate} />
       )}
 
@@ -64,6 +71,144 @@ export function JobLifecycleActions({
         </p>
       )}
     </div>
+  );
+}
+
+function ScopeSection({
+  job,
+  viewerRole,
+  onUpdate,
+}: {
+  job: JobLike;
+  viewerRole: "CUSTOMER" | "WORKER";
+  onUpdate: () => void;
+}) {
+  const [description, setDescription] = useState("");
+  const [total, setTotal] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function propose(e: React.FormEvent) {
+    e.preventDefault();
+    if (!description.trim() || !total) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/jobs/${job.id}/scope`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description, total: Number(total) }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error);
+        return;
+      }
+      setDescription("");
+      setTotal("");
+      onUpdate();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function respond(approve: boolean) {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/jobs/${job.id}/scope/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approve }),
+      });
+      if (res.ok) onUpdate();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (job.scopeConfirmed) {
+    return (
+      <p className="flex items-center gap-2 rounded-2xl border border-accent-soft bg-accent-soft/30 px-5 py-3 text-sm text-ink">
+        <Check size={15} className="text-accent" /> Scope confirmed at ₹{job.proposedTotal?.toFixed(0)} — work can begin.
+      </p>
+    );
+  }
+
+  // Customer sees a pending proposal to approve/decline
+  if (job.proposedTotal != null) {
+    if (viewerRole === "CUSTOMER") {
+      return (
+        <div className="rounded-2xl border border-accent-soft bg-accent-soft/30 p-5">
+          <h3 className="font-display text-lg text-ink">Confirm final scope</h3>
+          <p className="mt-2 text-sm text-ink">{job.proposedScope}</p>
+          <p className="mt-1 font-display text-2xl text-ink">₹{job.proposedTotal.toFixed(0)}</p>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => respond(true)}
+              disabled={loading}
+              className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-accent-ink hover:brightness-110 disabled:opacity-50"
+            >
+              Approve
+            </button>
+            <button
+              onClick={() => respond(false)}
+              disabled={loading}
+              className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-ink hover:border-ink disabled:opacity-50"
+            >
+              Ask for changes
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <p className="rounded-2xl border border-border bg-surface px-5 py-4 text-sm text-ink-muted">
+        Waiting for the customer to confirm your proposed scope (₹{job.proposedTotal.toFixed(0)}).
+      </p>
+    );
+  }
+
+  // Worker proposes a scope
+  if (viewerRole === "WORKER") {
+    return (
+      <form onSubmit={propose} className="rounded-2xl border border-border bg-surface p-5">
+        <h3 className="font-display text-lg text-ink">Propose final scope & price</h3>
+        <p className="mt-1 text-xs text-ink-muted">
+          Now that you&apos;ve diagnosed the job, confirm what you&apos;ll actually do and for how much before starting work.
+        </p>
+        <div className="mt-3 flex flex-col gap-3">
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            placeholder="What's the confirmed scope of work?"
+            className="input resize-none"
+          />
+          <input
+            type="number"
+            min={0}
+            value={total}
+            onChange={(e) => setTotal(e.target.value)}
+            placeholder="Final price ₹"
+            className="input"
+          />
+        </div>
+        {error && <p className="mt-2 text-sm text-accent">{error}</p>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-3 rounded-full bg-ink px-5 py-2 text-sm font-medium text-canvas hover:bg-accent disabled:opacity-50"
+        >
+          {loading ? "Sending…" : "Send to customer for approval"}
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <p className="rounded-2xl border border-border bg-surface px-5 py-4 text-sm text-ink-muted">
+      Waiting for {viewerRole === "CUSTOMER" ? "the worker" : "the customer"} to confirm the final scope before work starts.
+    </p>
   );
 }
 

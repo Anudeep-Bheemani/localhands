@@ -47,6 +47,22 @@ export function matchServiceFromText(
   return best;
 }
 
+/** Generic token-overlap score between free text and a worker's own skill/category names. No AI/LLM. */
+export function scoreTextAgainstSkills(text: string, skillNames: string[]): number {
+  const textTokens = tokenize(text);
+  const skillTokens = skillNames.flatMap((s) => tokenize(s));
+  if (textTokens.length === 0 || skillTokens.length === 0) return 0;
+
+  let score = 0;
+  for (const t of textTokens) {
+    for (const s of skillTokens) {
+      if (t === s) score += 2;
+      else if (s.includes(t) || t.includes(s)) score += 1;
+    }
+  }
+  return score;
+}
+
 export type MatchReason = { label: string; met: boolean };
 
 export function buildMatchReasons(opts: {

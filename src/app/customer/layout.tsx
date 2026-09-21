@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/logout-button";
+import { NotificationBell } from "@/components/notification-bell";
 
 export default async function CustomerLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -29,6 +30,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
               Home Passport
             </Link>
             <div className="flex items-center gap-4 border-l border-border pl-6">
+              <NotificationBell />
               <span className="text-sm text-ink-muted">{user.name}</span>
               <LogoutButton />
             </div>
