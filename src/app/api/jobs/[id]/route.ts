@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { jobWorkspaceInclude } from "@/lib/job-select";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -9,16 +10,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   const job = await prisma.job.findUnique({
     where: { id },
-    include: {
-      customer: true,
-      worker: { include: { user: true } },
-      service: { include: { category: true } },
-      jobProducts: { include: { workerProduct: true } },
-      statusHistory: { orderBy: { timestamp: "asc" } },
-      evidence: { orderBy: { createdAt: "asc" } },
-      additionalWork: { orderBy: { createdAt: "desc" } },
-      review: true,
-    },
+    include: jobWorkspaceInclude,
   });
 
   if (!job) return NextResponse.json({ error: "Not found" }, { status: 404 });

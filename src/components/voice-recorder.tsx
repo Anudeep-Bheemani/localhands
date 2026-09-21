@@ -63,8 +63,8 @@ export function VoiceRecorder({
 
   return (
     <div>
-      <span className="text-sm font-medium text-ink-muted">{label}</span>
-      <div className="mt-1.5 flex items-center gap-3">
+      {label && <span className="text-sm font-medium text-ink-muted">{label}</span>}
+      <div className={`flex items-center gap-3 ${label ? "mt-1.5" : ""}`}>
         {value && !recording ? (
           <div className="flex flex-1 items-center gap-3 rounded-full border border-border bg-surface px-2 py-1.5">
             <audio controls src={value} className="h-8 flex-1" />

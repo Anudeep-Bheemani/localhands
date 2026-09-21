@@ -43,8 +43,8 @@ export function SinglePhotoUpload({
 
   return (
     <div>
-      <span className="text-sm font-medium text-ink-muted">{label}</span>
-      <div className="mt-1.5">
+      {label && <span className="text-sm font-medium text-ink-muted">{label}</span>}
+      <div className={label ? "mt-1.5" : ""}>
         {value ? (
           <div className="relative h-28 w-28 overflow-hidden rounded-2xl border border-border">
             {/* eslint-disable-next-line @next/next/no-img-element */}
