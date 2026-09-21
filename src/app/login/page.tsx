@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,49 +34,59 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-      <h1 className="text-2xl font-semibold text-neutral-900">Log in</h1>
-      <p className="mt-1 text-sm text-neutral-500">Local work, connected.</p>
-
-      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-        <div>
-          <label className="text-sm font-medium text-neutral-700">Email</label>
-          <input
-            required
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-neutral-700">Password</label>
-          <input
-            required
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-          />
-        </div>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-2 rounded-md bg-neutral-900 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
-        >
-          {loading ? "Logging in…" : "Log in"}
-        </button>
-      </form>
-
-      <p className="mt-6 text-center text-sm text-neutral-500">
-        New here?{" "}
-        <Link href="/signup" className="font-medium text-neutral-900 underline">
-          Create an account
+    <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16">
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-md rounded-3xl border border-border bg-surface p-8 shadow-[0_1px_0_rgba(0,0,0,0.03)] sm:p-10"
+      >
+        <Link href="/" className="font-display italic text-lg text-ink-muted">
+          LocalHands
         </Link>
-      </p>
+        <h1 className="mt-4 font-display text-3xl tracking-tight text-ink">Welcome back</h1>
+        <p className="mt-1 text-sm text-ink-muted">Local work, connected.</p>
+
+        <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-4">
+          <label className="block">
+            <span className="text-sm font-medium text-ink-muted">Email</span>
+            <input
+              required
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="input mt-1.5"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium text-ink-muted">Password</span>
+            <input
+              required
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="input mt-1.5"
+            />
+          </label>
+
+          {error && <p className="text-sm text-accent">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-2 rounded-full bg-ink py-3 text-sm font-semibold text-canvas transition hover:bg-accent disabled:opacity-50"
+          >
+            {loading ? "Logging in…" : "Log in"}
+          </button>
+        </form>
+
+        <p className="mt-7 text-center text-sm text-ink-muted">
+          New here?{" "}
+          <Link href="/signup" className="font-medium text-ink underline underline-offset-4">
+            Create an account
+          </Link>
+        </p>
+      </motion.div>
     </main>
   );
 }

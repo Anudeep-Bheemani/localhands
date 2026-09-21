@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -34,84 +35,106 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-      <h1 className="text-2xl font-semibold text-neutral-900">Create your account</h1>
-      <p className="mt-1 text-sm text-neutral-500">Local work, connected.</p>
-
-      <div className="mt-6 grid grid-cols-2 gap-2 rounded-lg bg-neutral-100 p-1">
-        {(["CUSTOMER", "WORKER"] as const).map((r) => (
-          <button
-            key={r}
-            type="button"
-            onClick={() => setRole(r)}
-            className={`rounded-md py-2 text-sm font-medium transition ${
-              role === r ? "bg-white shadow text-neutral-900" : "text-neutral-500"
-            }`}
-          >
-            {r === "CUSTOMER" ? "I need a service" : "I'm a worker"}
-          </button>
-        ))}
-      </div>
-
-      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-        <div>
-          <label className="text-sm font-medium text-neutral-700">Full name</label>
-          <input
-            required
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-neutral-700">Email</label>
-          <input
-            required
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-neutral-700">Phone number</label>
-          <input
-            required
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            placeholder="+91 90000 00000"
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium text-neutral-700">Password</label>
-          <input
-            required
-            type="password"
-            minLength={6}
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-          />
-        </div>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-2 rounded-md bg-neutral-900 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:opacity-50"
-        >
-          {loading ? "Creating account…" : "Create account"}
-        </button>
-      </form>
-
-      <p className="mt-6 text-center text-sm text-neutral-500">
-        Already have an account?{" "}
-        <Link href="/login" className="font-medium text-neutral-900 underline">
-          Log in
+    <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-16">
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-md rounded-3xl border border-border bg-surface p-8 shadow-[0_1px_0_rgba(0,0,0,0.03)] sm:p-10"
+      >
+        <Link href="/" className="font-display italic text-lg text-ink-muted">
+          LocalHands
         </Link>
-      </p>
+        <h1 className="mt-4 font-display text-3xl tracking-tight text-ink">Create your account</h1>
+        <p className="mt-1 text-sm text-ink-muted">Local work, connected.</p>
+
+        <div className="mt-7 grid grid-cols-2 gap-1.5 rounded-full border border-border bg-canvas p-1.5">
+          {(["CUSTOMER", "WORKER"] as const).map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRole(r)}
+              className={`relative rounded-full py-2 text-sm font-medium transition ${
+                role === r ? "text-ink" : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              {role === r && (
+                <motion.span
+                  layoutId="role-pill"
+                  className="absolute inset-0 rounded-full bg-surface shadow-sm"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                />
+              )}
+              <span className="relative z-10">{r === "CUSTOMER" ? "I need a service" : "I'm a worker"}</span>
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-4">
+          <Field label="Full name">
+            <input
+              required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="input"
+            />
+          </Field>
+          <Field label="Email">
+            <input
+              required
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="input"
+            />
+          </Field>
+          <Field label="Phone number">
+            <input
+              required
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="+91 90000 00000"
+              className="input"
+            />
+          </Field>
+          <Field label="Password">
+            <input
+              required
+              type="password"
+              minLength={6}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="input"
+            />
+          </Field>
+
+          {error && <p className="text-sm text-accent">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="mt-2 rounded-full bg-ink py-3 text-sm font-semibold text-canvas transition hover:bg-accent disabled:opacity-50"
+          >
+            {loading ? "Creating account…" : "Create account"}
+          </button>
+        </form>
+
+        <p className="mt-7 text-center text-sm text-ink-muted">
+          Already have an account?{" "}
+          <Link href="/login" className="font-medium text-ink underline underline-offset-4">
+            Log in
+          </Link>
+        </p>
+      </motion.div>
     </main>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="text-sm font-medium text-ink-muted">{label}</span>
+      <div className="mt-1.5">{children}</div>
+    </label>
   );
 }

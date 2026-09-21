@@ -9,31 +9,33 @@ export default async function CustomerLayout({ children }: { children: React.Rea
   if (user.role !== "CUSTOMER") redirect("/worker");
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <header className="border-b border-neutral-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link href="/customer" className="font-semibold text-neutral-900">
+    <div className="min-h-screen bg-canvas">
+      <header className="border-b border-border bg-surface/80 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <Link href="/customer" className="font-display italic text-lg text-ink">
             LocalHands
           </Link>
-          <nav className="flex items-center gap-6">
-            <Link href="/customer" className="text-sm text-neutral-600 hover:text-neutral-900">
+          <nav className="flex items-center gap-7">
+            <Link href="/customer" className="text-sm font-medium text-ink-muted transition hover:text-ink">
               Home
             </Link>
-            <Link href="/customer/jobs" className="text-sm text-neutral-600 hover:text-neutral-900">
+            <Link href="/customer/jobs" className="text-sm font-medium text-ink-muted transition hover:text-ink">
               My Jobs
             </Link>
-            <Link href="/customer/custom-jobs" className="text-sm text-neutral-600 hover:text-neutral-900">
+            <Link href="/customer/custom-jobs" className="text-sm font-medium text-ink-muted transition hover:text-ink">
               Custom Jobs
             </Link>
-            <Link href="/customer/passport" className="text-sm text-neutral-600 hover:text-neutral-900">
+            <Link href="/customer/passport" className="text-sm font-medium text-ink-muted transition hover:text-ink">
               Home Passport
             </Link>
-            <span className="text-sm text-neutral-400">{user.name}</span>
-            <LogoutButton />
+            <div className="flex items-center gap-4 border-l border-border pl-6">
+              <span className="text-sm text-ink-muted">{user.name}</span>
+              <LogoutButton />
+            </div>
           </nav>
         </div>
       </header>
-      <div className="mx-auto max-w-5xl px-6 py-8">{children}</div>
+      <div className="mx-auto max-w-6xl px-6 py-10">{children}</div>
     </div>
   );
 }
