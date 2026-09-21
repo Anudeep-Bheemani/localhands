@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { notify } from "@/lib/notify";
+import { jobWorkspaceInclude } from "@/lib/job-select";
 
 const TRAVEL_DURATION_SECONDS = 75;
 
@@ -28,6 +29,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const updated = await prisma.job.update({
         where: { id },
         data: { status: "BOOKED", statusHistory: { create: { status: "BOOKED", note: "Worker accepted the request" } } },
+        include: jobWorkspaceInclude,
       });
       await notify({
         userId: job.customerId,
@@ -42,6 +44,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const updated = await prisma.job.update({
         where: { id },
         data: { status: "REJECTED", statusHistory: { create: { status: "REJECTED", note: "Worker declined the request" } } },
+        include: jobWorkspaceInclude,
       });
       await notify({
         userId: job.customerId,
@@ -65,6 +68,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           travelDurationSeconds: TRAVEL_DURATION_SECONDS,
           statusHistory: { create: { status: "TRAVELLING", note: "Worker is on the way" } },
         },
+        include: jobWorkspaceInclude,
       });
       await notify({
         userId: job.customerId,
@@ -79,6 +83,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const updated = await prisma.job.update({
         where: { id },
         data: { status: "ARRIVED", statusHistory: { create: { status: "ARRIVED", note: "Worker has arrived" } } },
+        include: jobWorkspaceInclude,
       });
       await notify({
         userId: job.customerId,
@@ -99,6 +104,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const updated = await prisma.job.update({
         where: { id },
         data: { status: "WORKING", statusHistory: { create: { status: "WORKING", note: "Work started" } } },
+        include: jobWorkspaceInclude,
       });
       return NextResponse.json({ job: updated });
     }
@@ -111,6 +117,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           confirmedTotal: job.confirmedTotal ?? job.initialEstimate,
           statusHistory: { create: { status: "COMPLETED", note: "Job marked complete" } },
         },
+        include: jobWorkspaceInclude,
       });
       await notify({
         userId: job.customerId,
@@ -134,6 +141,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           cancellationReason: typeof reason === "string" ? reason.slice(0, 500) : "",
           statusHistory: { create: { status: "CANCELLED", note: typeof reason === "string" ? reason.slice(0, 500) : "" } },
         },
+        include: jobWorkspaceInclude,
       });
       await notify({
         userId: isCustomer ? job.workerId : job.customerId,
