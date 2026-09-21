@@ -15,7 +15,7 @@ export default async function AccountSettingsPage() {
       : [];
 
   return (
-    <DashboardShell userName={user.name} navItems={user.role === "CUSTOMER" ? CUSTOMER_NAV : WORKER_NAV}>
+    <DashboardShell userName={user.name} role={user.role} navItems={user.role === "CUSTOMER" ? CUSTOMER_NAV : WORKER_NAV}>
       <div className="mx-auto max-w-2xl">
         <h1 className="font-display text-3xl tracking-tight text-ink">Account settings</h1>
         <p className="mt-1 text-ink-muted">Manage your login details and account info.</p>

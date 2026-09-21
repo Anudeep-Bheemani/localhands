@@ -8,6 +8,7 @@ import { Check, Phone, MessageCircle, AlertTriangle, Ban } from "lucide-react";
 import Link from "next/link";
 import { JobLifecycleActions } from "@/components/job-lifecycle-actions";
 import { ReportIssueLink } from "@/components/report-issue-link";
+import { StatusBadge } from "@/components/status-badge";
 
 const TrackingMap = dynamic(() => import("@/components/tracking-map").then((m) => m.TrackingMap), {
   ssr: false,
@@ -166,8 +167,11 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
 
       {/* Status stepper */}
       {job.status === "REQUESTED" ? (
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
-          <p className="text-sm text-ink">
+        <div className="card mt-6 border-2 border-warning/60 p-5">
+          <div className="flex items-center gap-2">
+            <StatusBadge status="REQUESTED" />
+          </div>
+          <p className="mt-2.5 text-sm text-ink">
             {viewerRole === "WORKER"
               ? "New booking request — accept or decline."
               : `Waiting for ${otherParty.name.split(" ")[0]} to respond…`}
@@ -177,14 +181,14 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
               <button
                 onClick={() => runAction("accept")}
                 disabled={!!actionLoading}
-                className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-accent-ink hover:brightness-110 disabled:opacity-50"
+                className="rounded-xl bg-accent px-6 py-2.5 text-sm font-bold text-accent-ink hover:brightness-110 disabled:opacity-50"
               >
                 Accept
               </button>
               <button
                 onClick={() => runAction("reject")}
                 disabled={!!actionLoading}
-                className="rounded-full border border-border px-6 py-2.5 text-sm font-semibold text-ink hover:border-ink disabled:opacity-50"
+                className="rounded-xl border border-border px-6 py-2.5 text-sm font-bold text-ink hover:border-danger hover:text-danger disabled:opacity-50"
               >
                 Decline
               </button>
@@ -192,36 +196,40 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
           )}
         </div>
       ) : job.status === "REJECTED" ? (
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-5 text-sm text-ink-muted">
-          This request was declined.
+        <div className="card mt-6 p-5 text-sm text-ink-muted">
+          <StatusBadge status="REJECTED" className="mb-2" />
+          <p>This request was declined.</p>
         </div>
       ) : job.status === "CANCELLED" ? (
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-5 text-sm text-ink-muted">
-          Cancelled by {job.cancelledBy === "CUSTOMER" ? "the customer" : "the worker"}
-          {job.cancellationReason ? ` — "${job.cancellationReason}"` : "."}
+        <div className="card mt-6 p-5 text-sm text-ink-muted">
+          <StatusBadge status="CANCELLED" className="mb-2" />
+          <p>
+            Cancelled by {job.cancelledBy === "CUSTOMER" ? "the customer" : "the worker"}
+            {job.cancellationReason ? ` — "${job.cancellationReason}"` : "."}
+          </p>
         </div>
       ) : (
-        <div className="mt-6 flex items-center gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-5">
+        <div className="card mt-6 flex items-center gap-1 overflow-x-auto p-5">
           {STEPS.map((step, i) => (
             <div key={step.key} className="flex flex-1 items-center last:flex-none">
               <div className="flex flex-col items-center gap-1.5">
                 <span
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium ${
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition ${
                     i < stepIndex
-                      ? "bg-ink text-canvas"
+                      ? "bg-accent-dark text-white"
                       : i === stepIndex
-                      ? "bg-accent text-accent-ink"
-                      : "bg-canvas text-ink-muted"
+                      ? "bg-accent text-accent-ink ring-4 ring-accent-soft"
+                      : "bg-surface-subtle text-ink-muted"
                   }`}
                 >
-                  {i < stepIndex ? <Check size={13} /> : i + 1}
+                  {i < stepIndex ? <Check size={14} /> : i + 1}
                 </span>
-                <span className={`whitespace-nowrap text-[11px] ${i <= stepIndex ? "text-ink" : "text-ink-muted"}`}>
+                <span className={`whitespace-nowrap text-[11px] font-semibold ${i <= stepIndex ? "text-ink" : "text-ink-muted"}`}>
                   {step.label}
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className={`mx-1 h-px flex-1 ${i < stepIndex ? "bg-ink" : "bg-border"}`} />
+                <div className={`mx-1 h-1 flex-1 rounded-full ${i < stepIndex ? "bg-accent-dark" : "bg-border"}`} />
               )}
             </div>
           ))}

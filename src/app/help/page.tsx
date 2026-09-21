@@ -78,7 +78,7 @@ export default async function HelpPage() {
   }
 
   return (
-    <DashboardShell userName={user.name} navItems={user.role === "CUSTOMER" ? CUSTOMER_NAV : WORKER_NAV}>
+    <DashboardShell userName={user.name} role={user.role} navItems={user.role === "CUSTOMER" ? CUSTOMER_NAV : WORKER_NAV}>
       <HelpContent />
     </DashboardShell>
   );

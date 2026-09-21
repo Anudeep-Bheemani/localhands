@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { Briefcase } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { WorkerJobsList } from "@/components/worker-jobs-list";
 
 export default async function WorkerJobsPage() {
   const user = await getCurrentUser();
@@ -11,13 +11,14 @@ export default async function WorkerJobsPage() {
 
   const jobs = await prisma.job.findMany({
     where: { workerId: user.id },
-    include: { customer: true, service: true },
+    include: { customer: true, service: { include: { category: true } }, customJob: true },
     orderBy: { createdAt: "desc" },
   });
 
   return (
     <div>
       <h1 className="font-display text-3xl tracking-tight text-ink">Jobs</h1>
+      <p className="mt-1 text-ink-muted">Every request you&apos;ve received, from first ask to final payment.</p>
       {jobs.length === 0 ? (
         <EmptyState
           icon={Briefcase}
@@ -27,27 +28,21 @@ export default async function WorkerJobsPage() {
           actionHref="/worker/profile"
         />
       ) : (
-        <div className="mt-6 flex flex-col gap-3">
-          {jobs.map((job) => (
-            <Link
-              key={job.id}
-              href={`/worker/jobs/${job.id}`}
-              className="flex items-center justify-between rounded-2xl border border-border bg-surface p-5 transition hover:border-ink"
-            >
-              <div>
-                <p className="font-medium text-ink">{job.service?.name ?? "Custom job"}</p>
-                <p className="text-sm text-ink-muted">{job.customer.name}</p>
-              </div>
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  job.status === "REQUESTED" ? "bg-accent-soft text-accent" : "bg-canvas text-ink-muted"
-                }`}
-              >
-                {job.status}
-              </span>
-            </Link>
-          ))}
-        </div>
+        <WorkerJobsList
+          jobs={jobs.map((j) => ({
+            id: j.id,
+            status: j.status,
+            isUrgent: j.isUrgent,
+            createdAt: j.createdAt.toISOString(),
+            scheduledFor: j.scheduledFor ? j.scheduledFor.toISOString() : null,
+            initialEstimate: j.initialEstimate,
+            confirmedTotal: j.confirmedTotal,
+            customerName: j.customer.name,
+            customerPhone: j.customer.phone,
+            jobAddress: j.jobAddress,
+            title: j.service ? `${j.service.category.name} — ${j.service.name}` : j.customJob ? "Custom job" : "Job",
+          }))}
+        />
       )}
     </div>
   );

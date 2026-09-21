@@ -9,7 +9,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
   if (user.role !== "CUSTOMER") redirect("/worker");
 
   return (
-    <DashboardShell userName={user.name} navItems={CUSTOMER_NAV}>
+    <DashboardShell userName={user.name} role="CUSTOMER" navItems={CUSTOMER_NAV}>
       {children}
     </DashboardShell>
   );
