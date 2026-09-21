@@ -85,6 +85,14 @@ export function WorkerDiscoveryList({
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  function browseAll() {
+    const params = new URLSearchParams(searchParamsRaw as Record<string, string>);
+    params.delete("problem");
+    params.delete("service");
+    params.delete("category");
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -99,26 +107,32 @@ export function WorkerDiscoveryList({
         </div>
       </div>
 
-      {!matchedServiceName && (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {categories.map((cat) => {
-            const Icon = getCategoryIcon(cat.icon);
-            const active = cat.name === matchedCategoryName;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => switchCategory(cat.slug)}
-                className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
-                  active ? "border-ink bg-ink text-canvas" : "border-border text-ink-muted hover:border-ink hover:text-ink"
-                }`}
-              >
-                <Icon size={13} />
-                {cat.name}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          onClick={browseAll}
+          className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
+            !matchedCategoryName ? "border-ink bg-ink text-canvas" : "border-border text-ink-muted hover:border-ink hover:text-ink"
+          }`}
+        >
+          Browse everyone nearby
+        </button>
+        {categories.map((cat) => {
+          const Icon = getCategoryIcon(cat.icon);
+          const active = cat.name === matchedCategoryName;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => switchCategory(cat.slug)}
+              className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
+                active ? "border-ink bg-ink text-canvas" : "border-border text-ink-muted hover:border-ink hover:text-ink"
+              }`}
+            >
+              <Icon size={13} />
+              {cat.name}
+            </button>
+          );
+        })}
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
         <div className="flex flex-wrap gap-1.5">
