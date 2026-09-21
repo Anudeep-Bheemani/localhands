@@ -324,6 +324,15 @@ function ProductsSection({ initialProducts }: { initialProducts: Product[] }) {
     });
   }
 
+  async function setPrice(id: string, price: number) {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, price } : p)));
+    await fetch(`/api/worker/products/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ price }),
+    });
+  }
+
   async function removeProduct(id: string) {
     setProducts((prev) => prev.filter((p) => p.id !== id));
     await fetch(`/api/worker/products/${id}`, { method: "DELETE" });
@@ -336,7 +345,17 @@ function ProductsSection({ initialProducts }: { initialProducts: Product[] }) {
           <div key={p.id} className="flex items-center justify-between rounded-xl border border-border px-4 py-2.5">
             <div>
               <p className={`text-sm ${p.stockQty > 0 ? "text-ink" : "text-ink-muted line-through"}`}>{p.name}</p>
-              <p className="text-xs text-ink-muted">₹{p.price.toFixed(0)} each</p>
+              <div className="flex items-center gap-1 text-xs text-ink-muted">
+                ₹
+                <input
+                  type="number"
+                  min={0}
+                  defaultValue={p.price}
+                  onBlur={(e) => setPrice(p.id, Number(e.target.value))}
+                  className="w-14 rounded border border-transparent bg-transparent px-1 hover:border-border focus:border-border focus:outline-none"
+                />
+                each
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
