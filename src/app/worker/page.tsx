@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { IncomingRequestCard } from "@/components/incoming-request-card";
 import { PageHeader } from "@/components/page-header";
+import { WorkerAvailabilityToggle } from "@/components/worker-availability-toggle";
 
 const ACTIVE_STATUSES = ["BOOKED", "TRAVELLING", "ARRIVED", "WORKING"] as const;
 
@@ -73,7 +74,7 @@ export default async function WorkerDashboard() {
         description="Here's how your business is doing."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map(({ label, value, icon: Icon, accent }) => (
           <div key={label} className="card card-hover p-5">
             <div className="flex items-center justify-between">
@@ -90,6 +91,8 @@ export default async function WorkerDashboard() {
           </div>
         ))}
       </div>
+
+      <WorkerAvailabilityToggle initialAvailable={profile.availableNow} />
 
       {pendingRequest && (
         <div className="mt-8">

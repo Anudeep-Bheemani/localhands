@@ -14,8 +14,12 @@ type JobLike = {
   review: { id: string } | null;
   proposedScope: string | null;
   proposedTotal: number | null;
+  proposedBy: "CUSTOMER" | "WORKER" | null;
   scopeConfirmed: boolean;
+  service: { name: string } | null;
 };
+
+const NEGOTIABLE_STATUSES = ["BOOKED", "TRAVELLING", "ARRIVED"];
 
 const DIMS = [
   { key: "quality", label: "Work quality" },
@@ -36,7 +40,7 @@ export function JobLifecycleActions({
 }) {
   return (
     <div className="mt-8 flex flex-col gap-8">
-      {job.status === "ARRIVED" && (
+      {NEGOTIABLE_STATUSES.includes(job.status) && (
         <ScopeSection job={job} viewerRole={viewerRole} onUpdate={onUpdate} />
       )}
 
@@ -87,6 +91,7 @@ function ScopeSection({
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [countering, setCountering] = useState(false);
 
   async function propose(e: React.FormEvent) {
     e.preventDefault();
@@ -106,6 +111,7 @@ function ScopeSection({
       }
       setDescription("");
       setTotal("");
+      setCountering(false);
       onUpdate();
     } finally {
       setLoading(false);
@@ -129,87 +135,116 @@ function ScopeSection({
   if (job.scopeConfirmed) {
     return (
       <p className="flex items-center gap-2 rounded-2xl border border-accent-soft bg-accent-soft/30 px-5 py-3 text-sm text-ink">
-        <Check size={15} className="text-accent" /> Scope confirmed at ₹{job.proposedTotal?.toFixed(0)} — work can begin.
+        <Check size={15} className="text-accent" /> Price confirmed at ₹{job.proposedTotal?.toFixed(0)} — work can begin.
       </p>
     );
   }
 
-  // Customer sees a pending proposal to approve/decline
-  if (job.proposedTotal != null) {
-    if (viewerRole === "CUSTOMER") {
-      return (
-        <div className="rounded-2xl border border-accent-soft bg-accent-soft/30 p-5">
-          <h3 className="font-display text-lg text-ink">Confirm final scope</h3>
-          <p className="mt-2 text-sm text-ink">{job.proposedScope}</p>
-          <p className="mt-1 font-display text-2xl text-ink">₹{job.proposedTotal.toFixed(0)}</p>
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={() => respond(true)}
-              disabled={loading}
-              className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-accent-ink hover:brightness-110 disabled:opacity-50"
-            >
-              Approve
-            </button>
-            <button
-              onClick={() => respond(false)}
-              disabled={loading}
-              className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-ink hover:border-ink disabled:opacity-50"
-            >
-              Ask for changes
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <p className="rounded-2xl border border-border bg-surface px-5 py-4 text-sm text-ink-muted">
-        Waiting for the customer to confirm your proposed scope (₹{job.proposedTotal.toFixed(0)}).
-      </p>
-    );
-  }
+  const pending = job.proposedTotal != null && job.proposedBy != null;
+  const isMyProposal = pending && job.proposedBy === viewerRole;
 
-  // Worker proposes a scope
-  if (viewerRole === "WORKER") {
-    return (
-      <form onSubmit={propose} className="rounded-2xl border border-border bg-surface p-5">
-        <h3 className="font-display text-lg text-ink">Propose final scope & price</h3>
-        <p className="mt-1 text-xs text-ink-muted">
-          Now that you&apos;ve diagnosed the job, confirm what you&apos;ll actually do and for how much before starting work.
-        </p>
-        <div className="mt-3 flex flex-col gap-3">
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            placeholder="What's the confirmed scope of work?"
-            className="input resize-none"
-          />
-          <input
-            type="number"
-            min={0}
-            value={total}
-            onChange={(e) => setTotal(e.target.value)}
-            placeholder="Final price ₹"
-            className="input"
-          />
-        </div>
-        {error && <p className="mt-2 text-sm text-accent">{error}</p>}
+  const proposeForm = (
+    <form onSubmit={propose} className="rounded-2xl border border-border bg-surface p-5">
+      <h3 className="font-display text-lg text-ink">
+        {countering
+          ? "Propose a different price"
+          : viewerRole === "WORKER"
+          ? job.service
+            ? "Propose final scope & price"
+            : "Set a price for this custom job"
+          : "Propose a price"}
+      </h3>
+      <p className="mt-1 text-xs text-ink-muted">
+        {viewerRole === "WORKER"
+          ? "Confirm what you'll do and for how much. The customer must approve it before work starts."
+          : "Suggest a scope and price — the worker must approve it before work starts."}
+      </p>
+      <div className="mt-3 flex flex-col gap-3">
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={2}
+          placeholder="What's the scope of work?"
+          className="input resize-none"
+        />
+        <input
+          type="number"
+          min={0}
+          value={total}
+          onChange={(e) => setTotal(e.target.value)}
+          placeholder="Price ₹"
+          className="input"
+        />
+      </div>
+      {error && <p className="mt-2 text-sm text-accent">{error}</p>}
+      <div className="mt-3 flex gap-2">
         <button
           type="submit"
           disabled={loading}
-          className="mt-3 rounded-full bg-ink px-5 py-2 text-sm font-medium text-canvas hover:bg-accent disabled:opacity-50"
+          className="rounded-full bg-ink px-5 py-2 text-sm font-medium text-canvas hover:bg-accent disabled:opacity-50"
         >
-          {loading ? "Sending…" : "Send to customer for approval"}
+          {loading ? "Sending…" : "Send for approval"}
         </button>
-      </form>
+        {countering && (
+          <button
+            type="button"
+            onClick={() => setCountering(false)}
+            className="rounded-full border border-border px-5 py-2 text-sm text-ink-muted hover:border-ink"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+  );
+
+  if (pending) {
+    if (isMyProposal) {
+      return (
+        <p className="rounded-2xl border border-border bg-surface px-5 py-4 text-sm text-ink-muted">
+          Waiting for {viewerRole === "CUSTOMER" ? "the worker" : "the customer"} to respond to your proposed price (₹
+          {job.proposedTotal!.toFixed(0)}).
+        </p>
+      );
+    }
+
+    if (countering) return proposeForm;
+
+    return (
+      <div className="rounded-2xl border border-accent-soft bg-accent-soft/30 p-5">
+        <h3 className="font-display text-lg text-ink">
+          {job.proposedBy === "WORKER" ? "Confirm the proposed price" : "Customer proposed a price"}
+        </h3>
+        <p className="mt-2 text-sm text-ink">{job.proposedScope}</p>
+        <p className="mt-1 font-display text-2xl text-ink">₹{job.proposedTotal!.toFixed(0)}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            onClick={() => respond(true)}
+            disabled={loading}
+            className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-accent-ink hover:brightness-110 disabled:opacity-50"
+          >
+            Approve
+          </button>
+          <button
+            onClick={() => respond(false)}
+            disabled={loading}
+            className="rounded-full border border-border px-5 py-2 text-sm font-semibold text-ink hover:border-ink disabled:opacity-50"
+          >
+            Decline
+          </button>
+          <button
+            onClick={() => setCountering(true)}
+            disabled={loading}
+            className="rounded-full border border-dashed border-border px-5 py-2 text-sm font-medium text-ink-muted hover:border-ink hover:text-ink disabled:opacity-50"
+          >
+            Propose a different price
+          </button>
+        </div>
+      </div>
     );
   }
 
-  return (
-    <p className="rounded-2xl border border-border bg-surface px-5 py-4 text-sm text-ink-muted">
-      Waiting for {viewerRole === "CUSTOMER" ? "the worker" : "the customer"} to confirm the final scope before work starts.
-    </p>
-  );
+  return proposeForm;
 }
 
 function AdditionalWorkForm({ jobId, onSubmitted }: { jobId: string; onSubmitted: () => void }) {

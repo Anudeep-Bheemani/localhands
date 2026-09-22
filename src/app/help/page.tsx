@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { CUSTOMER_NAV, WORKER_NAV } from "@/lib/nav-items";
+import { BrandLogo } from "@/components/brand-logo";
 
 async function HelpContent() {
   return (
@@ -67,9 +68,7 @@ export default async function HelpPage() {
       <div className="min-h-screen bg-canvas">
         <header className="border-b border-border bg-surface/80 backdrop-blur">
           <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
-            <Link href="/" className="font-display text-lg tracking-tight text-ink">
-              LocalHands
-            </Link>
+            <BrandLogo compact />
             <div className="flex items-center gap-3">
               <Link href="/login" className="px-3 py-1.5 text-xs font-semibold text-ink-muted hover:text-ink">
                 Log in

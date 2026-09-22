@@ -1,6 +1,7 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 
 const pinIcon = L.divIcon({
@@ -16,6 +17,14 @@ function ClickHandler({ onPick }: { onPick: (lat: number, lng: number) => void }
       onPick(e.latlng.lat, e.latlng.lng);
     },
   });
+  return null;
+}
+
+function FlyTo({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo([lat, lng], 15, { duration: 1.2 });
+  }, [map, lat, lng]);
   return null;
 }
 
@@ -40,6 +49,7 @@ export function LocationPicker({
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <FlyTo lat={lat} lng={lng} />
         <Marker position={[lat, lng]} icon={pinIcon} />
         <ClickHandler onPick={onChange} />
       </MapContainer>

@@ -33,6 +33,10 @@ export async function POST(req: Request) {
 
   const data = parsed.data;
 
+  if (!data.serviceId && !data.customJobId && !data.problemDescription.trim()) {
+    return NextResponse.json({ error: "Describe what you need done" }, { status: 400 });
+  }
+
   const [workerService, products] = await Promise.all([
     data.serviceId
       ? prisma.workerService.findUnique({
@@ -87,10 +91,13 @@ export async function POST(req: Request) {
     },
   });
 
+  const isCustomService = !data.serviceId && !data.customJobId;
   await notify({
     userId: data.workerId,
     type: "booking_requested",
-    title: `New booking request from ${user.name}`,
+    title: isCustomService
+      ? `${user.name} requested a custom service — needs your price`
+      : `New booking request from ${user.name}`,
     message: data.problemDescription.slice(0, 120),
     link: `/worker/jobs/${job.id}`,
   });

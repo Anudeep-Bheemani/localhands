@@ -1,7 +1,10 @@
 "use client";
 
+import "use client";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Printer } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 type Job = {
   id: string;
@@ -23,6 +26,29 @@ export function InvoiceView({ job }: { job: Job }) {
   const serviceAmount = job.initialEstimate - productsTotal;
   const additionsTotal = job.additionalWork.reduce((s, a) => s + a.extraCost, 0);
   const total = (job.confirmedTotal ?? job.initialEstimate) + additionsTotal;
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  async function downloadPdf() {
+    if (!receiptRef.current) return;
+    setDownloading(true);
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+      });
+      const pdf = new jsPDF("p", "mm", "a4");
+      const margin = 12;
+      const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+      const imageHeight = (canvas.height * pageWidth) / canvas.width;
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, pageWidth, imageHeight);
+      pdf.save(`localhands-receipt-${job.id.slice(-8)}.pdf`);
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-canvas px-6 py-10 print:bg-white print:px-0 print:py-0">
@@ -31,18 +57,28 @@ export function InvoiceView({ job }: { job: Job }) {
           <Link href={`/customer/jobs/${job.id}`} className="flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink">
             <ArrowLeft size={15} /> Back to job
           </Link>
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-canvas hover:bg-accent"
-          >
-            <Printer size={15} /> Print / Save as PDF
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2.5 text-sm font-medium text-ink hover:border-ink"
+            >
+              <Printer size={15} /> Print receipt
+            </button>
+            <button
+              onClick={downloadPdf}
+              disabled={downloading}
+              className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-canvas hover:bg-accent disabled:opacity-60"
+            >
+              {downloading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+              {downloading ? "Creating PDF…" : "Download PDF"}
+            </button>
+          </div>
         </div>
 
-        <div className="rounded-3xl border border-border bg-surface p-8 print:rounded-none print:border-0 print:p-0 sm:p-10">
+        <div ref={receiptRef} className="rounded-3xl border border-border bg-surface p-8 print:rounded-none print:border-0 print:p-0 sm:p-10">
           <div className="flex items-start justify-between border-b border-border pb-6">
             <div>
-              <p className="font-display italic text-xl text-ink">LocalHands</p>
+              <BrandLogo compact />
               <p className="mt-1 text-xs text-ink-muted">Invoice #{job.id.slice(-8).toUpperCase()}</p>
             </div>
             <div className="text-right text-sm text-ink-muted">

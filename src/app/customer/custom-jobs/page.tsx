@@ -38,9 +38,9 @@ export default async function CustomerCustomJobsPage() {
         action={
           <Link
             href="/customer/custom-jobs/new"
-            className="group flex items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-canvas transition hover:bg-accent-dark"
+            className="group flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-ink transition hover:bg-accent hover:text-white"
           >
-            <Plus size={15} className="transition-transform group-hover:rotate-90" /> Post a custom job
+            <Plus size={16} className="transition-transform group-hover:rotate-90" /> Post a custom job
           </Link>
         }
       />

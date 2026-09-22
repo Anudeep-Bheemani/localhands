@@ -35,6 +35,7 @@ type JobData = {
   paymentStatus: string;
   proposedScope: string | null;
   proposedTotal: number | null;
+  proposedBy: "CUSTOMER" | "WORKER" | null;
   scopeConfirmed: boolean;
   cancelledBy: "CUSTOMER" | "WORKER" | null;
   cancellationReason: string;
@@ -68,15 +69,8 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
   const router = useRouter();
   const [job, setJob] = useState<JobData>(initialJob);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [now, setNow] = useState(() => Date.now());
   const [cancelling, setCancelling] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-
-  useEffect(() => {
-    if (job.status !== "TRAVELLING") return;
-    const tick = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(tick);
-  }, [job.status]);
 
   async function refetch() {
     try {
@@ -137,16 +131,12 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
     .filter((a) => a.status === "APPROVED")
     .reduce((s, a) => s + a.extraCost, 0);
   const runningTotal = (job.confirmedTotal ?? job.initialEstimate) + approvedAdditions;
+  const pricePending = !job.service && job.confirmedTotal == null;
 
   const otherParty = viewerRole === "CUSTOMER" ? job.worker.user : job.customer;
   const stepIndex = STEPS.findIndex((s) => s.key === job.status);
 
-  const canPollTravel =
-    job.status === "TRAVELLING" && job.travelStartedAt && job.travelDurationSeconds != null;
-  const travelElapsed = canPollTravel
-    ? (now - new Date(job.travelStartedAt!).getTime()) / 1000
-    : 0;
-  const travelDone = canPollTravel && travelElapsed >= (job.travelDurationSeconds ?? 0);
+  const travelDone = job.status === "TRAVELLING";
 
   return (
     <div>
@@ -308,15 +298,16 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
         </div>
       )}
 
-      {job.status === "TRAVELLING" && job.travelStartLat != null && (
+      {(job.status === "TRAVELLING" || job.status === "BOOKED") && job.worker.baseLat != null && (
         <div className="mt-6">
           <TrackingMap
-            startLat={job.travelStartLat}
-            startLng={job.travelStartLng!}
-            endLat={job.travelEndLat!}
-            endLng={job.travelEndLng!}
-            startedAt={job.travelStartedAt!}
-            durationSeconds={job.travelDurationSeconds!}
+            startLat={job.travelStartLat ?? job.worker.baseLat}
+            startLng={job.travelStartLng ?? job.worker.baseLng}
+            endLat={job.travelEndLat ?? job.jobLat ?? job.worker.baseLat}
+            endLng={job.travelEndLng ?? job.jobLng ?? job.worker.baseLng}
+            travelStartedAt={job.travelStartedAt}
+            travelDurationSeconds={job.travelDurationSeconds}
+            isBooked={job.status === "BOOKED"}
           />
         </div>
       )}
@@ -401,7 +392,14 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
       <section className="mt-8">
         <h2 className="font-display text-lg text-ink">Cost</h2>
         <div className="mt-3 rounded-2xl border border-border bg-surface p-5">
-          <Row label={job.service?.name ?? "Custom job"} value={serviceEstimate} />
+          {pricePending ? (
+            <div className="flex items-center justify-between py-1">
+              <span className="text-sm text-ink-muted">Custom job</span>
+              <span className="text-sm text-ink-muted">Price to be proposed</span>
+            </div>
+          ) : (
+            <Row label={job.service?.name ?? "Custom job"} value={serviceEstimate} />
+          )}
           {job.jobProducts.map((p) => (
             <Row key={p.id} label={`${p.workerProduct.name} × ${p.qty}`} value={p.qty * p.priceAtTime} muted />
           ))}
@@ -414,7 +412,7 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
             <span className="text-sm font-medium text-ink">
               {job.status === "COMPLETED" ? "Total" : "Estimated total"}
             </span>
-            <span className="font-display text-xl text-ink">₹{runningTotal.toFixed(0)}</span>
+            <span className="font-display text-xl text-ink">{pricePending ? "TBD" : `₹${runningTotal.toFixed(0)}`}</span>
           </div>
           <div className="mt-1 flex items-center justify-between text-xs text-ink-muted">
             <span>Payment: {job.paymentStatus === "PAID" ? "Paid" : "Unpaid"}</span>

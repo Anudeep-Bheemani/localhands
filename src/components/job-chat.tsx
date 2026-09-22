@@ -21,13 +21,21 @@ export function JobChat({ jobId, viewerId, otherPartyName }: { jobId: string; vi
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   async function load() {
-    const res = await fetch(`/api/jobs/${jobId}/messages`);
-    if (res.ok) {
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/messages`, { cache: "no-store" });
+      if (!res.ok) {
+        setLoadError(true);
+        return;
+      }
       const data = await res.json();
-      setMessages(data.messages);
+      setMessages(data.messages ?? []);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
     }
   }
 
@@ -64,6 +72,8 @@ export function JobChat({ jobId, viewerId, otherPartyName }: { jobId: string; vi
         setImageUrl(null);
         setVoiceUrl(null);
       }
+    } catch {
+      setLoadError(true);
     } finally {
       setSending(false);
     }
@@ -76,6 +86,11 @@ export function JobChat({ jobId, viewerId, otherPartyName }: { jobId: string; vi
       </div>
 
       <div className="flex-1 overflow-y-auto px-6 py-4">
+        {loadError && (
+          <button onClick={load} className="mx-auto mb-4 block rounded-full bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent-dark">
+            Unable to load messages · Retry
+          </button>
+        )}
         {messages.length === 0 && (
           <p className="mt-8 text-center text-sm text-ink-muted">No messages yet — say hello.</p>
         )}

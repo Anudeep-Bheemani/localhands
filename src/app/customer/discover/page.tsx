@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { distanceKm } from "@/lib/geo";
-import { matchServiceFromText, buildMatchReasons } from "@/lib/matching";
+import { matchServiceFromText, buildMatchReasons, scoreTextAgainstSkills } from "@/lib/matching";
 import { WorkerDiscoveryList, type WorkerCard } from "@/components/worker-discovery-list";
 
 const DEFAULT_LAT = 12.9716;
@@ -40,11 +40,16 @@ export default async function DiscoverPage({
     matchedServiceName = targetCategory?.services.find((s) => s.id === targetServiceId)?.name ?? null;
   }
 
-  const candidateServiceIds = targetServiceId
-    ? [targetServiceId]
-    : targetCategory
-    ? targetCategory.services.map((s) => s.id)
-    : null;
+  // Explicit category/service browsing (a real click, not free text) still narrows at the DB
+  // level. A free-text problem search fetches everyone so a match can come purely from a
+  // worker's own custom skill tags, not just the fixed category/service taxonomy.
+  const explicitSelection = Boolean(sp.category || sp.service);
+  const candidateServiceIds =
+    explicitSelection && targetServiceId
+      ? [targetServiceId]
+      : explicitSelection && targetCategory
+      ? targetCategory.services.map((s) => s.id)
+      : null;
 
   const [workers, user] = await Promise.all([
     prisma.workerProfile.findMany({
@@ -69,9 +74,14 @@ export default async function DiscoverPage({
   const cards: WorkerCard[] = workers.map((w) => {
     const dist = distanceKm(lat, lng, w.baseLat, w.baseLng);
     const matchedService = targetServiceId ? w.services.find((s) => s.serviceId === targetServiceId) : null;
+    const customSkillScore = problem ? scoreTextAgainstSkills(problem, w.customSkills) : 0;
+    const matchedCustomSkill =
+      customSkillScore > 0
+        ? w.customSkills.find((skill) => scoreTextAgainstSkills(problem, [skill]) > 0) ?? null
+        : null;
     const price = matchedService?.price ?? Math.min(...w.services.map((s) => s.price), Infinity);
     const { reasons, score } = buildMatchReasons({
-      hasRequiredSkill: targetServiceId ? Boolean(matchedService) : true,
+      hasRequiredSkill: targetServiceId || problem ? Boolean(matchedService) || customSkillScore > 0 : true,
       distanceKm: dist,
       serviceRadiusKm: w.serviceRadiusKm,
       availableNow: w.availableNow,
@@ -91,10 +101,11 @@ export default async function DiscoverPage({
       identityVerified: w.identityVerified,
       distanceKm: dist,
       price,
-      skills: [...new Set(w.services.map((s) => s.service.name))],
+      skills: [...new Set([...w.services.map((s) => s.service.name), ...w.customSkills])],
       categoryNames: [...new Set(w.services.map((s) => s.service.category.name))],
       reasons,
-      score,
+      score: score + customSkillScore * 3,
+      matchedCustomSkill,
       portfolioCount: w.portfolio.length,
       isFavorite: favoriteIds.has(w.userId),
     };

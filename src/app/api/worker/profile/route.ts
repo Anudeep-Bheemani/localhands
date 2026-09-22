@@ -18,6 +18,7 @@ const patchSchema = z.object({
   baseLng: z.coerce.number().optional(),
   serviceRadiusKm: z.coerce.number().min(1).max(50).optional(),
   workingHours: workingHoursSchema.optional(),
+  customSkills: z.array(z.string().trim().min(1).max(40)).max(25).optional(),
 });
 
 export async function PATCH(req: Request) {

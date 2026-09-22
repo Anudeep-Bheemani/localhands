@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Plus, Trash2, Minus, Locate, Save, Loader2, ImagePlus } from "lucide-react";
+import { Plus, Trash2, Minus, Locate, Save, Loader2, ImagePlus, Sparkles, X, BadgeCheck, ArrowRight } from "lucide-react";
 import { SinglePhotoUpload } from "@/components/image-upload";
 
 const LocationPicker = dynamic(
@@ -41,6 +41,7 @@ type Profile = {
   services: WorkerServiceItem[];
   products: Product[];
   portfolio: PortfolioItem[];
+  customSkills: string[];
 };
 
 export function WorkerProfileManager({ profile, categories }: { profile: Profile; categories: Category[] }) {
@@ -48,11 +49,58 @@ export function WorkerProfileManager({ profile, categories }: { profile: Profile
     <div className="mt-8 flex flex-col gap-10">
       <BasicInfoSection profile={profile} />
       <AvailabilitySection profile={profile} />
+      <VerificationSection />
       <WorkingHoursSection initial={profile.workingHours} />
       <SkillsSection initialServices={profile.services} categories={categories} />
+      <CustomSkillsSection initialSkills={profile.customSkills} />
       <ProductsSection initialProducts={profile.products} />
       <PortfolioSection initialPortfolio={profile.portfolio} />
     </div>
+  );
+}
+
+function VerificationSection() {
+  const [applied, setApplied] = useState(false);
+
+  return (
+    <Section title="Profile verification" hint="Build trust with customers by showing that your identity has been reviewed.">
+      <div className="relative overflow-hidden rounded-3xl border border-accent/20 bg-gradient-to-br from-accent-soft via-surface to-surface p-5 sm:p-6">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-36 w-36 rounded-full bg-accent/15 blur-2xl" />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-white shadow-[0_8px_20px_-8px_rgba(226,83,12,0.8)]">
+              <BadgeCheck size={25} />
+            </span>
+            <div>
+              <h3 className="font-display text-xl text-ink">Get your verified badge</h3>
+              <p className="mt-1 max-w-xl text-sm leading-6 text-ink-muted">
+                A verified badge helps customers feel confident when choosing your services.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-ink-muted">
+                <span className="rounded-full bg-white/70 px-3 py-1">Identity check</span>
+                <span className="rounded-full bg-white/70 px-3 py-1">Trust badge</span>
+                <span className="rounded-full bg-white/70 px-3 py-1">More confidence</span>
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setApplied(true)}
+            disabled={applied}
+            className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold transition ${
+              applied ? "bg-white text-accent-dark" : "bg-ink text-white hover:bg-accent"
+            }`}
+          >
+            {applied ? <><BadgeCheck size={16} /> Application noted</> : <>Apply for verification <ArrowRight size={16} /></>}
+          </button>
+        </div>
+        {applied && (
+          <p className="relative mt-4 border-t border-accent/15 pt-4 text-xs font-medium text-accent-dark">
+            Your request is ready for review. This demo keeps the application on this page only.
+          </p>
+        )}
+      </div>
+    </Section>
   );
 }
 
@@ -365,6 +413,99 @@ function SkillsSection({ initialServices, categories }: { initialServices: Worke
           );
         })}
       </div>
+    </Section>
+  );
+}
+
+function CustomSkillsSection({ initialSkills }: { initialSkills: string[] }) {
+  const [skills, setSkills] = useState(initialSkills);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function persist(next: string[]) {
+    setSaving(true);
+    try {
+      await fetch("/api/worker/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customSkills: next }),
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function addSkill() {
+    const value = draft.trim();
+    if (!value) return;
+    if (skills.some((s) => s.toLowerCase() === value.toLowerCase())) {
+      setDraft("");
+      return;
+    }
+    const next = [...skills, value];
+    setSkills(next);
+    setDraft("");
+    persist(next);
+  }
+
+  function removeSkill(value: string) {
+    const next = skills.filter((s) => s !== value);
+    setSkills(next);
+    persist(next);
+  }
+
+  return (
+    <Section
+      title="Custom skills"
+      hint="Not on our list? Add it yourself — e.g. 'dog grooming', 'aquarium cleaning', 'furniture assembly'. Customers searching those exact words will find you."
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addSkill();
+            }
+          }}
+          placeholder="Type a skill and press Enter"
+          className="input w-56 sm:w-64"
+        />
+        <button
+          type="button"
+          onClick={addSkill}
+          disabled={!draft.trim()}
+          className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-canvas transition hover:bg-accent-dark disabled:opacity-40"
+        >
+          <Plus size={14} /> Add
+        </button>
+        {saving && <Loader2 size={14} className="animate-spin text-ink-muted" />}
+      </div>
+
+      {skills.length > 0 ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {skills.map((s) => (
+            <span
+              key={s}
+              className="group inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-accent to-accent-dark py-1.5 pl-3.5 pr-2 text-sm font-medium text-white shadow-[var(--shadow-fine)]"
+            >
+              <Sparkles size={12} className="text-white/80" />
+              {s}
+              <button
+                type="button"
+                onClick={() => removeSkill(s)}
+                aria-label={`Remove ${s}`}
+                className="ml-0.5 rounded-full p-0.5 transition hover:bg-white/20"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-ink-muted">No custom skills added yet.</p>
+      )}
     </Section>
   );
 }

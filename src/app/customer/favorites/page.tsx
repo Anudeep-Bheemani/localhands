@@ -56,7 +56,7 @@ export default async function FavoritesPage() {
       identityVerified: w.identityVerified,
       distanceKm: dist,
       price: Math.min(...w.services.map((s) => s.price), Infinity),
-      skills: [...new Set(w.services.map((s) => s.service.name))],
+      skills: [...new Set([...w.services.map((s) => s.service.name), ...w.customSkills])],
       categoryNames: [...new Set(w.services.map((s) => s.service.category.name))],
       reasons,
       score,

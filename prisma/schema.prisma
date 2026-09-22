@@ -150,6 +150,7 @@ model WorkerProfile {
   availableNow        Boolean  @default(true)
   acceptsCustomJobs   Boolean  @default(false)
   profilePhotoUrl     String?
+  customSkills        String[] @default([])
   ratingAvg           Float    @default(0)
   jobsCompleted       Int      @default(0)
   totalEarned         Float    @default(0)
@@ -297,6 +298,7 @@ model Job {
 
   proposedScope         String?
   proposedTotal         Float?
+  proposedBy            Role?
   scopeConfirmed        Boolean       @default(false)
 
   cancelledBy           Role?

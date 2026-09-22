@@ -10,6 +10,8 @@ import { VoiceRecorder } from "@/components/voice-recorder";
 type WorkerService = { id: string; name: string; category: string; price: number };
 type WorkerProduct = { id: string; name: string; price: number; stockQty: number };
 
+const OTHER_SERVICE_ID = "__OTHER__";
+
 export function BookingForm({
   worker,
   preselectedServiceId,
@@ -33,7 +35,7 @@ export function BookingForm({
   const [serviceId, setServiceId] = useState<string | null>(
     preselectedServiceId && worker.services.some((s) => s.id === preselectedServiceId)
       ? preselectedServiceId
-      : worker.services[0]?.id ?? null
+      : worker.services[0]?.id ?? OTHER_SERVICE_ID
   );
   const [problem, setProblem] = useState(initialProblem);
   const [photoUrl, setPhotoUrl] = useState<string | null>(initialPhotoUrl);
@@ -46,6 +48,7 @@ export function BookingForm({
   const [error, setError] = useState<string | null>(null);
 
   const selectedService = worker.services.find((s) => s.id === serviceId) ?? null;
+  const isOtherService = serviceId === OTHER_SERVICE_ID;
 
   const productsTotal = useMemo(
     () =>
@@ -73,7 +76,7 @@ export function BookingForm({
     e.preventDefault();
     setError(null);
     if (!problem.trim()) {
-      setError("Describe what you need done");
+      setError(isOtherService ? "Describe the job so the worker can quote a price" : "Describe what you need done");
       return;
     }
     if (timing === "later" && !scheduledFor) {
@@ -87,7 +90,7 @@ export function BookingForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           workerId: worker.id,
-          serviceId,
+          serviceId: isOtherService ? null : serviceId,
           problemDescription: problem,
           problemVoiceNoteUrl: voiceUrl,
           problemPhotoUrl: photoUrl,
@@ -131,6 +134,19 @@ export function BookingForm({
               <span className="text-sm font-medium text-ink">₹{s.price.toFixed(0)}</span>
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => setServiceId(OTHER_SERVICE_ID)}
+            className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
+              isOtherService ? "border-ink bg-canvas" : "border-border hover:border-ink"
+            }`}
+          >
+            <div>
+              <p className="text-sm font-medium text-ink">Other (specify in description)</p>
+              <p className="text-xs text-ink-muted">Describe the job below — {worker.name.split(" ")[0]} will quote a price</p>
+            </div>
+            <span className="text-xs font-medium text-ink-muted">No price listed</span>
+          </button>
         </div>
       </Section>
 
@@ -166,7 +182,7 @@ export function BookingForm({
           onChange={(e) => setProblem(e.target.value)}
           rows={3}
           className="input resize-none"
-          placeholder="What exactly needs doing?"
+          placeholder={isOtherService ? "Describe exactly what you need — this is what the worker will price" : "What exactly needs doing?"}
         />
         <div className="mt-4 flex flex-wrap items-center gap-5">
           <SinglePhotoUpload folder="problem-photos" value={photoUrl} onChange={setPhotoUrl} label="Photo" />
@@ -211,12 +227,17 @@ export function BookingForm({
         <div className="mt-2 flex items-baseline justify-between">
           <div className="text-sm text-ink-muted">
             {selectedService && <p>{selectedService.name}: ₹{selectedService.price.toFixed(0)}</p>}
+            {isOtherService && <p>Custom service: price set by {worker.name.split(" ")[0]} after review</p>}
             {productsTotal > 0 && <p>Materials: ₹{productsTotal.toFixed(0)}</p>}
           </div>
-          <p className="font-display text-3xl text-ink">₹{estimate.toFixed(0)}</p>
+          <p className="font-display text-3xl text-ink">
+            {isOtherService && productsTotal === 0 ? "TBD" : `₹${estimate.toFixed(0)}`}
+          </p>
         </div>
         <p className="mt-2 text-xs text-ink-muted">
-          This is an estimate. The final scope and price are confirmed once {worker.name.split(" ")[0]} diagnoses the job.
+          {isOtherService
+            ? `${worker.name.split(" ")[0]} will review your description and send a price for you to approve before any work starts.`
+            : `This is an estimate. The final scope and price are confirmed once ${worker.name.split(" ")[0]} diagnoses the job.`}
         </p>
       </div>
 

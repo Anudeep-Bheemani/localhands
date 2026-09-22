@@ -19,7 +19,7 @@ import { MarqueeStrip } from "@/components/marquee-strip";
 
 const CATEGORIES = [
   { label: "Electrical", icon: Wrench, big: true, img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400&h=400&fit=crop" },
-  { label: "Plumbing", icon: Hammer, big: false, img: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=400&h=400&fit=crop" },
+  { label: "Plumbing", icon: Hammer, big: false, img: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400&h=400&fit=crop" },
   { label: "Cooking", icon: ChefHat, big: false, img: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=400&fit=crop" },
   { label: "Cleaning", icon: Sparkles, big: true, img: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=400&fit=crop" },
   { label: "Pet care", icon: Dog, big: false, img: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop" },
@@ -443,7 +443,11 @@ export default async function Home() {
       <footer className="bg-ink px-6 py-12 text-white/60">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
           <div>
-            <span className="font-display text-lg text-white">LocalHands</span>
+            <Link href="/" className="inline-flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/localhands-logo.png" alt="LocalHands" className="h-20 w-20 object-contain" />
+              <span className="font-display text-lg text-white">LocalHands</span>
+            </Link>
             <p className="mt-1 text-sm">Your skills. Your services. Your customers. Your business.</p>
           </div>
           <div className="flex items-center gap-2 text-sm">

@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { WorkerProfileView } from "@/components/worker-profile-view";
 import type { WorkingHoursDay } from "@/components/worker-profile-manager";
 import { LogoutButton } from "@/components/logout-button";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default async function WorkerPassportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -35,9 +36,7 @@ export default async function WorkerPassportPage({ params }: { params: Promise<{
     <div className="min-h-screen bg-canvas">
       <header className="border-b border-border bg-surface/80 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link href="/" className="font-display italic text-lg text-ink">
-            LocalHands
-          </Link>
+          <BrandLogo compact />
           <div className="flex items-center gap-3">
             {isOwnPassport && (
               <span className="hidden rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent sm:inline-block">

@@ -35,7 +35,7 @@ export default async function WorkerProfilePage() {
           <Link
             href={`/workers/${user.id}`}
             target="_blank"
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-ink transition hover:border-ink"
+            className="flex shrink-0 items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white hover:text-ink"
           >
             <ExternalLink size={14} /> View my public passport
           </Link>

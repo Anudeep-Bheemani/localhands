@@ -18,7 +18,10 @@ export default async function WorkerCustomJobsPage() {
   if (!worker) redirect("/worker/onboarding");
 
   const skillNames = [
-    ...new Set(worker.services.flatMap((s) => [s.service.name, s.service.category.name])),
+    ...new Set([
+      ...worker.services.flatMap((s) => [s.service.name, s.service.category.name]),
+      ...worker.customSkills,
+    ]),
   ];
 
   const customJobs = await prisma.customJob.findMany({

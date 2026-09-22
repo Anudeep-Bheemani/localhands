@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star, ShieldCheck, MapPin, Briefcase, Calendar, Clock } from "lucide-react";
+import { Star, MapPin, Briefcase, Calendar, Clock, BadgeCheck } from "lucide-react";
 import { Reveal } from "@/components/reveal";
 import type { WorkingHoursDay } from "@/components/worker-profile-manager";
 
@@ -38,6 +38,7 @@ type WorkerData = {
   workingHours: WorkingHoursDay[] | null;
   user: { name: string };
   services: { id: string; price: number; service: { name: string; category: { name: string } } }[];
+  customSkills: string[];
   products: { id: string; name: string; price: number; inStock: boolean; stockQty: number; photoUrl: string | null }[];
   portfolio: { id: string; photoUrl: string; caption: string }[];
   reviewsReceived: {
@@ -97,9 +98,13 @@ export function WorkerProfileView({
                 )}
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <h1 className="font-display text-2xl text-ink">{worker.user.name}</h1>
-                  {worker.identityVerified && <ShieldCheck size={17} className="text-accent" />}
+                  {worker.identityVerified && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent-soft px-2.5 py-1 text-[11px] font-bold text-accent-dark">
+                      <BadgeCheck size={14} /> Verified
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-ink-muted">
                   {[...new Set(worker.services.map((s) => s.service.category.name))].join(" · ")}
@@ -161,6 +166,18 @@ export function WorkerProfileView({
               </div>
             ))}
           </div>
+          {worker.customSkills.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {worker.customSkills.map((skill) => (
+                <span
+                  key={skill}
+                  className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-accent to-accent-dark px-3 py-1.5 text-xs font-semibold text-white"
+                >
+                  ✨ {skill}
+                </span>
+              ))}
+            </div>
+          )}
         </section>
       </Reveal>
 
