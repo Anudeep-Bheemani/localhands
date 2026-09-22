@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ReviewsList } from "@/components/reviews-list";
+import { PageHeader } from "@/components/page-header";
 
 const DIMS = [
   { key: "quality", label: "Work quality" },
@@ -27,8 +28,7 @@ export default async function WorkerReviewsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl tracking-tight text-ink">Reviews</h1>
-      <p className="mt-1 text-ink-muted">Everything customers have said after a completed job.</p>
+      <PageHeader eyebrow="⭐ Reputation" title="Reviews" description="Everything customers have said after a completed job." />
 
       {reviews.length === 0 ? (
         <p className="mt-8 rounded-2xl border border-dashed border-border p-10 text-center text-sm text-ink-muted">

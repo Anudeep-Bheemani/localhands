@@ -10,6 +10,8 @@ export const jobWorkspaceInclude = {
       userId: true,
       baseLat: true,
       baseLng: true,
+      profilePhotoUrl: true,
+      ratingAvg: true,
       user: { select: { id: true, name: true, phone: true } },
     },
   },

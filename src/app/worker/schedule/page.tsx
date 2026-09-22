@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ScheduleView } from "@/components/schedule-view";
+import { PageHeader } from "@/components/page-header";
 
 const ACTIVE_STATUSES = ["REQUESTED", "BOOKED", "TRAVELLING", "ARRIVED", "WORKING"] as const;
 
@@ -18,8 +19,7 @@ export default async function WorkerSchedulePage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl tracking-tight text-ink">Schedule</h1>
-      <p className="mt-1 text-ink-muted">Your accepted work, laid out by when it needs to happen.</p>
+      <PageHeader eyebrow="📅 Calendar" title="Schedule" description="Your accepted work, laid out by when it needs to happen." />
 
       <ScheduleView
         jobs={jobs.map((j) => ({

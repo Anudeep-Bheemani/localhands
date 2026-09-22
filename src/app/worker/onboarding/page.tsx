@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WorkerOnboardingForm } from "@/components/worker-onboarding-form";
+import { PageHeader } from "@/components/page-header";
 
 export default async function WorkerOnboardingPage() {
   const user = await getCurrentUser();
@@ -14,16 +15,17 @@ export default async function WorkerOnboardingPage() {
   });
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-14">
-      <span className="text-xs font-medium uppercase tracking-widest text-ink-muted">Step 1 of 1</span>
-      <h1 className="mt-2 font-display text-3xl tracking-tight text-ink sm:text-4xl">
-        Set up your professional profile
-      </h1>
-      <p className="mt-2 text-ink-muted">
-        This is what customers see when deciding whether to book you. Be specific.
-      </p>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        eyebrow="🚀 Step 1 of 1"
+        title="Set up your professional profile"
+        description="This is what customers see when deciding whether to book you. Be specific."
+        contained
+      />
 
-      <WorkerOnboardingForm categories={categories} />
-    </main>
+      <div className="mt-6">
+        <WorkerOnboardingForm categories={categories} />
+      </div>
+    </div>
   );
 }

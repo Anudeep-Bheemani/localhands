@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { distanceKm } from "@/lib/geo";
 import { scoreTextAgainstSkills } from "@/lib/matching";
 import { CustomJobBoard } from "@/components/custom-job-board";
+import { PageHeader } from "@/components/page-header";
 
 export default async function WorkerCustomJobsPage() {
   const user = await getCurrentUser();
@@ -49,9 +50,10 @@ export default async function WorkerCustomJobsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl tracking-tight text-ink">Custom Jobs Board</h1>
-      <p className="mt-1 text-ink-muted">One-off tasks that don&apos;t fit a fixed category.</p>
-      <CustomJobBoard cards={cards} />
+      <PageHeader eyebrow="🛠️ Open board" title="Custom Jobs Board" description="One-off tasks that don't fit a fixed category." />
+      <div className="mt-8">
+        <CustomJobBoard cards={cards} />
+      </div>
     </div>
   );
 }

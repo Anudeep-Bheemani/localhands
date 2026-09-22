@@ -6,6 +6,7 @@ import { getCategoryIcon } from "@/lib/category-icons";
 import { Reveal } from "@/components/reveal";
 import { Star, BookMarked } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
 
 export default async function HomeServicePassportPage() {
   const user = await getCurrentUser();
@@ -27,11 +28,11 @@ export default async function HomeServicePassportPage() {
 
   return (
     <div>
-      <span className="text-xs font-medium uppercase tracking-widest text-ink-muted">My Home</span>
-      <h1 className="mt-2 font-display text-3xl tracking-tight text-ink sm:text-4xl">Home Service Passport</h1>
-      <p className="mt-2 text-ink-muted">
-        A running maintenance record of every completed job at your home — what was done, by whom, and when.
-      </p>
+      <PageHeader
+        eyebrow="🏠 My home"
+        title="Home Service Passport"
+        description="A running maintenance record of every completed job at your home — what was done, by whom, and when."
+      />
 
       {jobs.length === 0 ? (
         <EmptyState

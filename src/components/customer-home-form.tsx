@@ -61,7 +61,7 @@ export function CustomerHomeForm({ categories }: { categories: Category[] }) {
             if (!problem.trim()) return;
             goToDiscover({ problem });
           }}
-          className="rounded-3xl border border-border bg-surface p-6 sm:p-8"
+          className="card rounded-[1.75rem] p-6 shadow-[var(--shadow-card)] transition-shadow focus-within:shadow-[var(--shadow-elevated)] sm:p-8"
         >
           <textarea
             value={problem}
@@ -112,7 +112,7 @@ export function CustomerHomeForm({ categories }: { categories: Category[] }) {
           <button
             type="submit"
             disabled={!problem.trim()}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-ink py-3.5 text-sm font-semibold text-canvas transition hover:bg-accent disabled:opacity-40 sm:w-auto sm:px-8"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-ink py-3.5 text-sm font-semibold text-canvas transition hover:bg-accent-dark disabled:opacity-40 sm:w-auto sm:px-8"
           >
             Find matching workers
             <ArrowRight size={16} />
@@ -123,30 +123,30 @@ export function CustomerHomeForm({ categories }: { categories: Category[] }) {
       <Reveal delay={0.08}>
         <div>
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl text-ink">Or browse a category</h2>
+            <h2 className="font-display text-2xl tracking-tight text-ink">🔍 Or browse a category</h2>
             <Link
               href="/customer/custom-jobs/new"
-              className="flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+              className="group flex items-center gap-1.5 text-sm font-semibold text-accent-dark hover:underline"
             >
-              <Plus size={15} />
+              <Plus size={15} className="transition-transform group-hover:rotate-90" />
               Post a custom job
             </Link>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
             {categories.map((cat) => {
               const Icon = getCategoryIcon(cat.icon);
               return (
                 <motion.button
                   key={cat.id}
-                  whileHover={{ y: -3 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ y: -5 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => goToDiscover({ category: cat.slug })}
-                  className="flex flex-col items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-left transition hover:border-ink"
+                  className="card group flex flex-col items-start gap-3 p-4 text-left transition-shadow hover:shadow-[var(--shadow-card-hover)]"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent">
-                    <Icon size={17} />
+                  <span className="icon-chip h-10 w-10 transition-all duration-300 group-hover:bg-gradient-to-br group-hover:from-accent group-hover:to-accent-dark group-hover:text-white">
+                    <Icon size={18} />
                   </span>
-                  <span className="text-sm font-medium text-ink">{cat.name}</span>
+                  <span className="text-sm font-semibold text-ink">{cat.name}</span>
                 </motion.button>
               );
             })}

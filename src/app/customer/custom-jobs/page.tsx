@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { Plus, Star, Briefcase, ShieldCheck, ListTodo } from "lucide-react";
 import { PickWorkerButton } from "@/components/pick-worker-button";
 import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
 
 export default async function CustomerCustomJobsPage() {
   const user = await getCurrentUser();
@@ -30,15 +31,19 @@ export default async function CustomerCustomJobsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl tracking-tight text-ink">My Custom Jobs</h1>
-        <Link
-          href="/customer/custom-jobs/new"
-          className="flex items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-canvas hover:bg-accent"
-        >
-          <Plus size={15} /> Post a custom job
-        </Link>
-      </div>
+      <PageHeader
+        eyebrow="📋 Open requests"
+        title="My Custom Jobs"
+        description="Anything that doesn't fit a category — posted for nearby workers to respond to."
+        action={
+          <Link
+            href="/customer/custom-jobs/new"
+            className="group flex items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-canvas transition hover:bg-accent-dark"
+          >
+            <Plus size={15} className="transition-transform group-hover:rotate-90" /> Post a custom job
+          </Link>
+        }
+      />
 
       {customJobs.length === 0 ? (
         <EmptyState
@@ -51,7 +56,7 @@ export default async function CustomerCustomJobsPage() {
       ) : (
         <div className="mt-6 flex flex-col gap-4">
           {customJobs.map((cj) => (
-            <div key={cj.id} className="rounded-2xl border border-border bg-surface p-5">
+            <div key={cj.id} className="card card-hover p-5">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm text-ink">{cj.description}</p>
                 <span

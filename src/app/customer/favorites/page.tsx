@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { distanceKm } from "@/lib/geo";
 import { buildMatchReasons } from "@/lib/matching";
 import { WorkerDiscoveryList, type WorkerCard } from "@/components/worker-discovery-list";
+import { PageHeader } from "@/components/page-header";
 
 const DEFAULT_LAT = 12.9716;
 const DEFAULT_LNG = 77.5946;
@@ -66,8 +67,7 @@ export default async function FavoritesPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl tracking-tight text-ink">Favorites</h1>
-      <p className="mt-1 text-ink-muted">Workers you&apos;ve saved for next time.</p>
+      <PageHeader eyebrow="💚 Saved" title="Favorites" description="Workers you've saved for next time." />
 
       {cards.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-border p-10 text-center">

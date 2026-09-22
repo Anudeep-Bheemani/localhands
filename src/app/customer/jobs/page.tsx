@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { Briefcase, MapPin } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
+import { PageHeader } from "@/components/page-header";
 
 export default async function CustomerJobsPage() {
   const user = await getCurrentUser();
@@ -18,8 +19,7 @@ export default async function CustomerJobsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl tracking-tight text-ink">My Jobs</h1>
-      <p className="mt-1 text-ink-muted">Everything you&apos;ve booked, from request to review.</p>
+      <PageHeader eyebrow="🧰 Bookings" title="My Jobs" description="Everything you've booked, from request to review." />
       {jobs.length === 0 ? (
         <EmptyState
           icon={Briefcase}
@@ -31,7 +31,7 @@ export default async function CustomerJobsPage() {
       ) : (
         <div className="mt-6 flex flex-col gap-3">
           {jobs.map((job) => (
-            <Link key={job.id} href={`/customer/jobs/${job.id}`} className="card flex items-center justify-between p-5 transition hover:border-accent">
+            <Link key={job.id} href={`/customer/jobs/${job.id}`} className="card card-hover flex items-center justify-between p-5">
               <div className="flex items-center gap-3.5">
                 <span className="icon-chip h-11 w-11 shrink-0 font-display text-lg">{job.worker.user.name.charAt(0)}</span>
                 <div>

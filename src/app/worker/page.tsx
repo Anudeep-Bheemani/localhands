@@ -7,6 +7,7 @@ import {
   ArrowRight, MapPin, Wrench, Package, Award,
 } from "lucide-react";
 import { IncomingRequestCard } from "@/components/incoming-request-card";
+import { PageHeader } from "@/components/page-header";
 
 const ACTIVE_STATUSES = ["BOOKED", "TRAVELLING", "ARRIVED", "WORKING"] as const;
 
@@ -66,19 +67,26 @@ export default async function WorkerDashboard() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl tracking-tight text-ink">Welcome back, {user.name.split(" ")[0]}</h1>
-      <p className="mt-1 text-ink-muted">Here&apos;s how your business is doing.</p>
+      <PageHeader
+        eyebrow="👋 Dashboard"
+        title={`Welcome back, ${user.name.split(" ")[0]}`}
+        description="Here's how your business is doing."
+      />
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map(({ label, value, icon: Icon, accent }) => (
-          <div key={label} className="card p-5">
+          <div key={label} className="card card-hover p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase text-ink-muted">{label}</span>
-              <span className="icon-chip h-8 w-8">
-                <Icon size={15} />
+              <span
+                className={`icon-chip h-9 w-9 ${
+                  accent ? "bg-gradient-to-br from-accent to-accent-dark text-white" : ""
+                }`}
+              >
+                <Icon size={16} />
               </span>
             </div>
-            <p className={`mt-3 font-display text-2xl ${accent ? "text-accent-dark" : "text-ink"}`}>{value}</p>
+            <p className={`mt-3 font-display text-2xl ${accent ? "gradient-text" : "text-ink"}`}>{value}</p>
           </div>
         ))}
       </div>
@@ -120,10 +128,10 @@ export default async function WorkerDashboard() {
         </Link>
       )}
 
-      <h2 className="mt-10 font-display text-lg text-ink">Job report</h2>
+      <h2 className="mt-10 font-display text-lg tracking-tight text-ink">📊 Job report</h2>
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
         {report.map(({ label, value, icon: Icon, href }) => (
-          <Link key={label} href={href} className="rounded-2xl border border-border bg-surface p-4 transition hover:border-accent">
+          <Link key={label} href={href} className="card card-hover p-4">
             <Icon size={15} className="text-ink-muted" />
             <p className="mt-2 font-display text-xl text-ink">{value}</p>
             <p className="mt-0.5 text-xs text-ink-muted">{label}</p>
@@ -131,11 +139,11 @@ export default async function WorkerDashboard() {
         ))}
       </div>
 
-      <h2 className="mt-10 font-display text-lg text-ink">Quick actions</h2>
+      <h2 className="mt-10 font-display text-lg tracking-tight text-ink">⚡ Quick actions</h2>
       <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {quickActions.map(({ label, desc, icon: Icon, href }) => (
-          <Link key={label} href={href} className="card group p-4 transition hover:border-accent">
-            <span className="icon-chip h-9 w-9">
+          <Link key={label} href={href} className="card card-hover group p-4">
+            <span className="icon-chip h-9 w-9 transition-all duration-300 group-hover:bg-gradient-to-br group-hover:from-accent group-hover:to-accent-dark group-hover:text-white">
               <Icon size={16} />
             </span>
             <p className="mt-3 text-sm font-bold text-ink group-hover:text-accent-dark">{label}</p>

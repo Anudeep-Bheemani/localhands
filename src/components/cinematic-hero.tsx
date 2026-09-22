@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { HeroHeadline } from "@/components/hero-headline";
+import { MagneticButton } from "@/components/magnetic-button";
 
 export function CinematicHero() {
   const ref = useRef<HTMLElement>(null);
@@ -60,19 +61,23 @@ export function CinematicHero() {
           transition={{ delay: 0.75, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="mt-9 flex flex-wrap items-center gap-4"
         >
-          <Link
-            href="/signup"
-            className="group inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-white/90"
-          >
-            Find a worker
-            <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-full border border-white/30 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:border-white/70"
-          >
-            Become a worker
-          </Link>
+          <MagneticButton>
+            <Link
+              href="/signup"
+              className="group inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-ink transition hover:bg-white/90"
+            >
+              Find a worker
+              <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+          </MagneticButton>
+          <MagneticButton>
+            <Link
+              href="/signup"
+              className="inline-flex rounded-full border border-white/30 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:border-white/70"
+            >
+              Become a worker
+            </Link>
+          </MagneticButton>
         </motion.div>
       </motion.div>
 

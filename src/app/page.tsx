@@ -15,6 +15,7 @@ import { AnimatedCounter } from "@/components/animated-counter";
 import { BeforeAfterSlider } from "@/components/before-after-slider";
 import { TiltCard } from "@/components/tilt-card";
 import { FloatingCTA } from "@/components/floating-cta";
+import { MarqueeStrip } from "@/components/marquee-strip";
 
 const CATEGORIES = [
   { label: "Electrical", icon: Wrench, big: true, img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400&h=400&fit=crop" },
@@ -92,6 +93,11 @@ export default async function Home() {
             </span>
           </Reveal>
         </section>
+
+        <MarqueeStrip
+          className="mt-16"
+          items={["ELECTRICAL", "PLUMBING", "COOKING", "CLEANING", "PET CARE", "MOVING", "AND ANYTHING ELSE"]}
+        />
 
         {/* ───────────────────── STATS ───────────────────── */}
         <section className="border-y border-border bg-surface px-6 py-12">

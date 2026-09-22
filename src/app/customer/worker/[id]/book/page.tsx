@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { BookingForm } from "@/components/booking-form";
+import { PageHeader } from "@/components/page-header";
 
 export default async function BookWorkerPage({
   params,
@@ -27,14 +28,14 @@ export default async function BookWorkerPage({
 
   return (
     <div className="mx-auto max-w-3xl">
-      <span className="text-xs font-medium uppercase tracking-widest text-ink-muted">Booking request</span>
-      <h1 className="mt-2 font-display text-3xl tracking-tight text-ink sm:text-4xl">
-        Book {worker.user.name.split(" ")[0]}
-      </h1>
-      <p className="mt-2 text-ink-muted">
-        {worker.user.name} will accept or decline this request before anything is confirmed.
-      </p>
+      <PageHeader
+        eyebrow="📝 Booking request"
+        title={`Book ${worker.user.name.split(" ")[0]}`}
+        description={`${worker.user.name} will accept or decline this request before anything is confirmed.`}
+        contained
+      />
 
+      <div className="mt-6">
       <BookingForm
         worker={{
           id: worker.userId,
@@ -55,6 +56,7 @@ export default async function BookWorkerPage({
         jobLng={sp.lng ? Number(sp.lng) : null}
         jobAddress={sp.address ?? ""}
       />
+      </div>
     </div>
   );
 }

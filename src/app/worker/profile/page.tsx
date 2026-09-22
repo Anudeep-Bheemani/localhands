@@ -4,6 +4,7 @@ import { ExternalLink } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WorkerProfileManager, type WorkingHoursDay } from "@/components/worker-profile-manager";
+import { PageHeader } from "@/components/page-header";
 
 export default async function WorkerProfilePage() {
   const user = await getCurrentUser();
@@ -26,23 +27,27 @@ export default async function WorkerProfilePage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl tracking-tight text-ink">My Profile</h1>
-          <p className="mt-1 text-ink-muted">This is what customers see when deciding whether to book you.</p>
-        </div>
-        <Link
-          href={`/workers/${user.id}`}
-          target="_blank"
-          className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-ink hover:border-ink"
-        >
-          <ExternalLink size={14} /> View my public passport
-        </Link>
-      </div>
-      <WorkerProfileManager
-        profile={{ ...profile, workingHours: profile.workingHours as unknown as WorkingHoursDay[] | null }}
-        categories={categories}
+      <PageHeader
+        eyebrow="👷 Public profile"
+        title="My Profile"
+        description="This is what customers see when deciding whether to book you."
+        action={
+          <Link
+            href={`/workers/${user.id}`}
+            target="_blank"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-ink transition hover:border-ink"
+          >
+            <ExternalLink size={14} /> View my public passport
+          </Link>
+        }
+        contained
       />
+      <div className="mt-6">
+        <WorkerProfileManager
+          profile={{ ...profile, workingHours: profile.workingHours as unknown as WorkingHoursDay[] | null }}
+          categories={categories}
+        />
+      </div>
     </div>
   );
 }

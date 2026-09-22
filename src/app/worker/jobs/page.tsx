@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { Briefcase } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { WorkerJobsList } from "@/components/worker-jobs-list";
+import { PageHeader } from "@/components/page-header";
 
 export default async function WorkerJobsPage() {
   const user = await getCurrentUser();
@@ -17,8 +18,7 @@ export default async function WorkerJobsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl tracking-tight text-ink">Jobs</h1>
-      <p className="mt-1 text-ink-muted">Every request you&apos;ve received, from first ask to final payment.</p>
+      <PageHeader eyebrow="🧰 Pipeline" title="Jobs" description="Every request you've received, from first ask to final payment." />
       {jobs.length === 0 ? (
         <EmptyState
           icon={Briefcase}

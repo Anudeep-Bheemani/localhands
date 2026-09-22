@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Check, Phone, MessageCircle, AlertTriangle, Ban } from "lucide-react";
+import { Check, Phone, MessageCircle, AlertTriangle, Ban, Star, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { JobLifecycleActions } from "@/components/job-lifecycle-actions";
 import { ReportIssueLink } from "@/components/report-issue-link";
@@ -48,7 +48,14 @@ type JobData = {
   travelStartedAt: string | null;
   travelDurationSeconds: number | null;
   customer: { id: string; name: string; phone: string };
-  worker: { userId: string; baseLat: number; baseLng: number; user: { name: string; phone: string } };
+  worker: {
+    userId: string;
+    baseLat: number;
+    baseLng: number;
+    profilePhotoUrl: string | null;
+    ratingAvg: number;
+    user: { name: string; phone: string };
+  };
   service: { name: string; category: { name: string } } | null;
   jobProducts: { id: string; qty: number; priceAtTime: number; workerProduct: { name: string } }[];
   additionalWork: { id: string; description: string; extraCost: number; status: string }[];
@@ -153,9 +160,59 @@ export function JobWorkspace({ initialJob, viewerRole }: { initialJob: JobData; 
           <h1 className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
             {job.service ? `${job.service.category.name} — ${job.service.name}` : "Custom job"}
           </h1>
-          <p className="mt-1 text-sm text-ink-muted">
-            Job #{job.id.slice(-6).toUpperCase()} · {otherParty.name}
+          <p className="mt-1 text-xs font-medium uppercase tracking-wider text-ink-muted">
+            Job #{job.id.slice(-6).toUpperCase()}
           </p>
+
+          {viewerRole === "CUSTOMER" ? (
+            <Link
+              href={`/workers/${job.worker.userId}`}
+              className="card card-hover group mt-4 flex w-full max-w-md items-center gap-4 p-4"
+            >
+              {job.worker.profilePhotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={job.worker.profilePhotoUrl}
+                  alt={otherParty.name}
+                  className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-2 ring-accent-soft transition group-hover:ring-accent"
+                />
+              ) : (
+                <span className="icon-chip h-16 w-16 shrink-0 rounded-2xl font-display text-2xl">
+                  {otherParty.name.charAt(0)}
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-bold uppercase tracking-widest text-ink-muted">
+                  Your worker
+                </span>
+                <span className="mt-0.5 block truncate font-display text-xl text-ink group-hover:text-accent-dark">
+                  {otherParty.name}
+                </span>
+                {job.worker.ratingAvg > 0 && (
+                  <span className="mt-1 flex items-center gap-1 text-sm text-ink-muted">
+                    <Star size={13} className="text-accent" fill="currentColor" /> {job.worker.ratingAvg.toFixed(1)} rating
+                  </span>
+                )}
+              </span>
+              <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 py-2.5 text-xs font-bold text-canvas transition group-hover:bg-accent-dark">
+                View profile
+                <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+              </span>
+            </Link>
+          ) : (
+            <div className="card mt-4 flex w-full max-w-md items-center gap-4 p-4">
+              <span className="icon-chip h-16 w-16 shrink-0 rounded-2xl font-display text-2xl">
+                {otherParty.name.charAt(0)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-bold uppercase tracking-widest text-ink-muted">
+                  Your customer
+                </span>
+                <span className="mt-0.5 block truncate font-display text-xl text-ink">{otherParty.name}</span>
+              </span>
+            </div>
+          )}
+
           {job.scheduledFor && (
             <p className="mt-1 text-xs text-ink-muted">
               Scheduled for {new Date(job.scheduledFor).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
