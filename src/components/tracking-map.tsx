@@ -79,7 +79,7 @@ export function TrackingMap({
   const [route, setRoute] = useState<Coordinate[]>(fallbackRoute);
   const [distanceM, setDistanceM] = useState<number | null>(null);
   const [routeDurationS, setRouteDurationS] = useState<number | null>(null);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
   // Fetch OSRM route
   useEffect(() => {

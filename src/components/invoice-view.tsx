@@ -1,6 +1,5 @@
 "use client";
 
-import "use client";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Loader2, Printer } from "lucide-react";

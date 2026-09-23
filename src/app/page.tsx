@@ -6,16 +6,14 @@ import {
   Award, TrendingUp, Users, ClipboardList, BadgeCheck,
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
 import { Reveal } from "@/components/reveal";
 import { SiteNav } from "@/components/site-nav";
 import { HeroVisual } from "@/components/hero-visual";
 import { CinematicHero } from "@/components/cinematic-hero";
-import { AnimatedCounter } from "@/components/animated-counter";
+import { ScrollServiceStory } from "@/components/scroll-service-story";
 import { BeforeAfterSlider } from "@/components/before-after-slider";
 import { TiltCard } from "@/components/tilt-card";
 import { FloatingCTA } from "@/components/floating-cta";
-import { MarqueeStrip } from "@/components/marquee-strip";
 
 const CATEGORIES = [
   { label: "Electrical", icon: Wrench, big: true, img: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400&h=400&fit=crop" },
@@ -55,20 +53,6 @@ export default async function Home() {
   const user = await getCurrentUser();
   if (user) redirect(user.role === "WORKER" ? "/worker" : "/customer");
 
-  const [workerCount, categoryCount, jobsCompleted, reviewCount] = await Promise.all([
-    prisma.workerProfile.count({ where: { profileComplete: true } }),
-    prisma.category.count(),
-    prisma.job.count({ where: { status: "COMPLETED" } }),
-    prisma.review.count(),
-  ]);
-
-  const stats = [
-    { label: "Independent workers", value: workerCount },
-    { label: "Service categories", value: categoryCount },
-    { label: "Jobs completed", value: jobsCompleted },
-    { label: "Reviews from real jobs", value: reviewCount },
-  ];
-
   return (
     <div className="flex flex-1 flex-col overflow-x-clip">
       <SiteNav />
@@ -76,44 +60,7 @@ export default async function Home() {
       <main className="flex-1">
         <CinematicHero />
 
-        {/* category quick-links, right under hero */}
-        <section className="px-6 pt-10">
-          <Reveal className="mx-auto flex max-w-6xl flex-wrap justify-center gap-2.5">
-            {CATEGORIES.map(({ label, icon: Icon }) => (
-              <span
-                key={label}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-medium text-ink-muted"
-              >
-                <Icon size={13} className="text-accent" />
-                {label}
-              </span>
-            ))}
-            <span className="inline-flex items-center gap-2 rounded-full border border-dashed border-border px-3.5 py-1.5 text-xs text-ink-muted">
-              + anything else
-            </span>
-          </Reveal>
-        </section>
-
-        <MarqueeStrip
-          className="mt-16"
-          items={["ELECTRICAL", "PLUMBING", "COOKING", "CLEANING", "PET CARE", "MOVING", "AND ANYTHING ELSE"]}
-        />
-
-        {/* ───────────────────── STATS ───────────────────── */}
-        <section className="border-y border-border bg-surface px-6 py-12">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 sm:grid-cols-4">
-            {stats.map((s, i) => (
-              <Reveal key={s.label} delay={i * 0.06}>
-                <div className="text-center sm:text-left">
-                  <p className="font-display text-4xl text-ink sm:text-5xl">
-                    <AnimatedCounter value={s.value} />
-                  </p>
-                  <p className="mt-1.5 text-xs font-medium text-ink-muted sm:text-sm">{s.label}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </section>
+        <ScrollServiceStory />
 
         {/* ───────────────────── THE PROBLEM ───────────────────── */}
         <section className="px-6 py-28">
